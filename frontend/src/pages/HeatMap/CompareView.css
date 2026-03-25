@@ -1,0 +1,32 @@
+.compare-view {
+  background-color: var(--surface-card);
+  padding: 1.5rem;
+  border-top: 1px solid var(--surface-high);
+  overflow-y: auto;
+  max-height: 50%;
+}
+
+.compare-title {
+  font-size: 1rem;
+  margin-bottom: 1rem;
+}
+
+.compare-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.compare-card {
+  background-color: var(--surface-low);
+  border-radius: var(--radius-lg);
+  padding: 1rem;
+}
+
+.compare-card h4 {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--on-surface-variant);
+  margin-bottom: 0.75rem;
+}

@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import HeatMapPage from './pages/HeatMap/HeatMapPage'
+import AuthPage from './pages/Auth/AuthPage'
 import './App.css'
 
 function App() {
@@ -10,6 +11,7 @@ function App() {
       <main className="app-main">
         <Routes>
           <Route path="/" element={<HeatMapPage />} />
+          <Route path="/auth" element={<AuthPage />} />
           {/* Routes des autres membres */}
           {/* <Route path="/classement" element={<ClassementPage />} /> */}
           {/* <Route path="/admin" element={<AdminPage />} /> */}

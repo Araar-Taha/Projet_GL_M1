@@ -19,8 +19,8 @@ function Navbar() {
           </NavLink>
         </li>
         <li>
-          <NavLink to="/admin">
-            Admin
+          <NavLink to="/auth">
+            Compte
           </NavLink>
         </li>
       </ul>

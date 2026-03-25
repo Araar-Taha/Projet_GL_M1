@@ -3,6 +3,7 @@ import FilterPanel from './FilterPanel'
 import MapView from './MapView'
 import InfoPanel from './InfoPanel'
 import CompareView from './CompareView'
+import DashboardGraphes from '../../components/DashboardGraphes'
 import './HeatMapPage.css'
 
 function HeatMapPage() {
@@ -19,38 +20,51 @@ function HeatMapPage() {
   const [territoireB, setTerritoireB] = useState(null)
 
   return (
-    <div className="heatmap-page">
-      <aside className="heatmap-sidebar">
-        <FilterPanel
-          filters={filters}
-          onFiltersChange={setFilters}
-          mode={mode}
-          onModeChange={setMode}
-          territoireA={territoireA}
-          territoireB={territoireB}
-          onTerritoireAChange={setTerritoireA}
-          onTerritoireBChange={setTerritoireB}
-        />
-      </aside>
-
-      <section className="heatmap-center">
-        <MapView
-          filters={filters}
-          onCommuneSelect={setSelectedCommune}
-        />
-        {mode === 'comparer' && territoireA && territoireB && (
-          <CompareView
+    <div className="page-container">
+      
+      {/* BLOC DU HAUT (Filtres + Carte + Info) */}
+      <div className="top-section">
+        
+        <div className="filters-sidebar">
+          <FilterPanel
+            filters={filters}
+            onFiltersChange={setFilters}
+            mode={mode}
+            onModeChange={setMode}
             territoireA={territoireA}
             territoireB={territoireB}
+            onTerritoireAChange={setTerritoireA}
+            onTerritoireBChange={setTerritoireB}
           />
-        )}
-      </section>
+        </div>
 
-      {mode === 'explorer' && (
-        <aside className="heatmap-panel">
-          <InfoPanel commune={selectedCommune} />
-        </aside>
-      )}
+        <div className="heatmap-center">
+          <MapView
+            filters={filters}
+            onCommuneSelect={setSelectedCommune}
+          />
+          {mode === 'comparer' && territoireA && territoireB && (
+            <CompareView
+              territoireA={territoireA}
+              territoireB={territoireB}
+            />
+          )}
+        </div>
+
+        {/* Le panneau est TOUJOURS là maintenant, comme tu le voulais ! */}
+        {mode === 'explorer' && (
+          <div className="info-sidebar">
+            <InfoPanel commune={selectedCommune} />
+          </div>
+        )}
+        
+      </div>
+
+      {/* BLOC DU BAS (Graphiques) */}
+      <div className="bottom-section">
+        <DashboardGraphes />
+      </div>
+
     </div>
   )
 }

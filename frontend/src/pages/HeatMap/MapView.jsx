@@ -21,8 +21,14 @@ function getColor(intensity) {
 function MapView({ filters, onCommuneSelect }) {
   const [geoData, setGeoData] = useState(null)
 
+  const mockTerritories = [
+    { code: '75', nom: 'Paris', population: 2161000, prixM2: 11000, ventes: 14000 },
+    { code: '34', nom: 'Hérault', population: 1180000, prixM2: 3600, ventes: 6200 },
+    { code: '59', nom: 'Nord', population: 2600000, prixM2: 2200, ventes: 8100 },
+    { code: '13', nom: 'Bouches-du-Rhône', population: 2060000, prixM2: 4200, ventes: 9600 },
+  ]
+
   useEffect(() => {
-    // Charger le GeoJSON des départements
     fetch('https://raw.githubusercontent.com/gregoiredavid/france-geojson/master/departements.geojson')
       .then((res) => res.json())
       .then((data) => setGeoData(data))
@@ -40,18 +46,19 @@ function MapView({ filters, onCommuneSelect }) {
 
     // Clic → sélection
     layer.on('click', () => {
-      onCommuneSelect({
-        code,
-        nom,
-      })
+      const mock = mockTerritories.find((item) => item.code === code)
+      const selection = mock || { code, nom, population: null, prixM2: null, ventes: null }
+      if (onCommuneSelect) {
+        onCommuneSelect(selection)
+      }
     })
 
     // Hover effect
     layer.on('mouseover', () => {
-      layer.setStyle({ fillOpacity: 0.8, weight: 2 })
+      layer.setStyle({ fillOpacity: 0.92, weight: 2, color: '#1a72ff' })
     })
     layer.on('mouseout', () => {
-      layer.setStyle({ fillOpacity: 0.6, weight: 1 })
+      layer.setStyle({ fillOpacity: 0.6, weight: 1, color: '#ffffff' })
     })
   }
 

@@ -36,7 +36,10 @@ function InfoPanel({ commune }) {
 
   return (
     <div className="info-panel">
-      <h2 className="info-title">{commune.nom}</h2>
+      <div className="info-header">
+        <h2 className="info-title">📍 Détails de la zone</h2>
+      </div>
+      <h3 className="commune-name">{commune.nom}</h3>
       <span className="info-code">Code : {commune.code}</span>
 
       {stats && (

@@ -1,31 +1,66 @@
-.heatmap-page {
-  display: flex;
-  flex: 1;
-  height: calc(100vh - 56px);
-  overflow: hidden;
-}
-
-.heatmap-sidebar {
-  width: 280px;
-  min-width: 280px;
-  background-color: var(--surface-card);
-  padding: 1.5rem;
-  overflow-y: auto;
-  box-shadow: var(--shadow-sm);
-}
-
-.heatmap-center {
-  flex: 1;
+/* Conteneur principal */
+.page-container {
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  gap: 24px;
+  padding: 24px;
+  width: 100%;
+  box-sizing: border-box;
+  background-color: #f3f4f6; /* Fond de la page gris clair */
+  min-height: 100vh;
 }
 
-.heatmap-panel {
-  width: 340px;
-  min-width: 340px;
-  background-color: var(--surface-card);
-  padding: 1.5rem;
-  overflow-y: auto;
-  box-shadow: var(--shadow-sm);
+/* Section du haut alignée */
+.top-section {
+  display: flex;
+  gap: 20px;
+  height: 600px;
+  width: 100%;
+  align-items: stretch;
+}
+
+/* Sidebar Filtres (À GAUCHE - ICI ON REMET LE BLANC D'ORIGINE) */
+.filters-sidebar {
+  width: 280px;
+  min-width: 280px;
+  height: 100%;
+  background-color: #ffffff !important; /* Force le fond blanc comme au début */
+  border-radius: 12px;
+  padding: 20px;
+  box-sizing: border-box;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05); /* Petite ombre douce */
+}
+
+/* LA CARTE (Au milieu) */
+.heatmap-center {
+  flex: 1;
+  height: 100%;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  overflow: hidden;
+  position: relative;
+}
+
+/* Force Leaflet à remplir le centre */
+.heatmap-center > div, 
+.leaflet-container {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Sidebar Info (À DROITE) */
+.info-sidebar {
+  width: 350px;
+  min-width: 350px;
+  height: 100%;
+  border-radius: 12px;
+  padding: 20px;
+  box-sizing: border-box;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+/* Section du bas (Graphiques) */
+.bottom-section {
+  width: 100%;
 }

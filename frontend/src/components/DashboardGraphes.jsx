@@ -1,6 +1,5 @@
 import React from 'react';
 import './DashboardGraphes.css';
-
 const DashboardGraphes = () => {
   const titles = [
     'Évolution Prix m²',

@@ -1,22 +1,91 @@
-/* Effet au survol des lignes */
-.classement-row {
-  transition: background-color 0.2s ease;
+.dashboard-graphes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  background-color: #f1f5f9; /* Fond légèrement gris pour faire ressortir les cartes blanches */
 }
 
-.classement-row:hover {
-  background-color: #f8faff !important;
-  cursor: pointer;
+.graph-box {
+  background-color: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.3s ease;
 }
 
-/* Petite flèche de tendance */
-.trend-up {
-  color: #10b981;
-  margin-left: 8px;
-  font-weight: bold;
+.graph-box:hover {
+  transform: translateY(-5px);
 }
 
-/* Style pour les codes (première colonne) */
-.classement-table td strong {
+.graph-header {
+  padding: 15px 20px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.graph-header h3 {
+  margin: 0;
+  font-size: 15px;
   color: #64748b;
-  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.graph-content {
+  padding: 20px;
+  height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Style des barres réelles */
+.real-bar {
+  flex: 1;
+  background: linear-gradient(to top, #6366f1, #a855f7);
+  height: 0;
+  border-radius: 6px 6px 0 0;
+  animation: growUp 1.2s ease-out forwards;
+}
+
+@keyframes growUp {
+  to { height: var(--height); }
+}
+
+/* Bulles d'âge */
+.age-bubbles {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.bubble {
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 12px;
+  box-shadow: 0 10px 15px rgba(0,0,0,0.1);
+}
+
+/* Animations de ligne */
+.line-anim {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  animation: draw 2.5s ease-out forwards;
+}
+
+@keyframes draw {
+  to { stroke-dashoffset: 0; }
+}
+
+.skeleton-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  width: 100%;
+  height: 100%;
 }

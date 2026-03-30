@@ -1,0 +1,22 @@
+/* Effet au survol des lignes */
+.classement-row {
+  transition: background-color 0.2s ease;
+}
+
+.classement-row:hover {
+  background-color: #f8faff !important;
+  cursor: pointer;
+}
+
+/* Petite flèche de tendance */
+.trend-up {
+  color: #10b981;
+  margin-left: 8px;
+  font-weight: bold;
+}
+
+/* Style pour les codes (première colonne) */
+.classement-table td strong {
+  color: #64748b;
+  font-weight: 600;
+}

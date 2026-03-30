@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import HeatMapPage from './pages/HeatMap/HeatMapPage'
 import AuthPage from './pages/Auth/AuthPage'
-import ClassementPage from './components/ClassementPage'
+import ClassementPage from './pages/classement/ClassementPage'
 import './App.css'
 
 function App() {

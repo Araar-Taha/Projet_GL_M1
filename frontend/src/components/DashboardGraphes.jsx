@@ -39,7 +39,7 @@ const DashboardGraphes = () => {
   </div>
 )}
 
-            {/* Cas 1 : Barres de population stylées */}
+            {/* Cas 1 : Barres de population */}
             {index === 1 && (
               <div className="skeleton-bars">
                 {[40, 70, 45, 90, 65, 80, 50].map((h, i) => (
@@ -48,16 +48,24 @@ const DashboardGraphes = () => {
               </div>
             )}
 
-            {/* Cas 2 : Petites bulles pour les âges */}
-            {index === 2 && (
-              <div className="age-bubbles">
-                <div className="bubble" style={{width: '60px', height: '60px', background: '#6366F1'}}>25%</div>
-                <div className="bubble" style={{width: '80px', height: '80px', background: '#8B5CF6'}}>45%</div>
-                <div className="bubble" style={{width: '50px', height: '50px', background: '#A78BFA'}}>30%</div>
-              </div>
-            )}
-
-            {/* Cas 3 : Ta comparaison de zones */}
+            {/* Cas 2 : Tranches d'âges en % (L'Abergement-Clémenciat;2019) */}
+{index === 2 && (
+  <div className="age-bubbles">
+    <div className="bubble-group">
+      <div className="bubble" style={{width: '65px', height: '65px', background: '#60A5FA', fontSize: '14px'}}>24%</div>
+      <span>Enfant</span>
+    </div>
+    <div className="bubble-group">
+      <div className="bubble" style={{width: '90px', height: '90px', background: '#8B5CF6', fontSize: '18px'}}>57%</div>
+      <span>Jeune adulte</span>
+    </div>
+    <div className="bubble-group">
+      <div className="bubble" style={{width: '60px', height: '60px', background: '#F472B6', fontSize: '14px'}}>19%</div>
+      <span>Senior et retraités</span>
+    </div>
+  </div>
+)}
+            {/* Cas 3 : La comparaison de zones */}
             {index === 3 && (
               <div className="comparison-chart">
                 <svg width="100%" height="100" viewBox="0 0 200 100" className="chart-svg">

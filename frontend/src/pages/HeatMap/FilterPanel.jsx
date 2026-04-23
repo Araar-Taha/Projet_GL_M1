@@ -5,6 +5,8 @@ import './FilterPanel.css'
 const TYPES_MUTATION = [
   { value: '', label: 'Tous les types' },
   { value: 'Vente', label: 'Vente' },
+  { value: "Vente en l'état futur d'achèvement", label: "Vente en l'état futur d'achèvement" },
+  { value: 'Vente terrain à bâtir', label: 'Vente terrain à bâtir' },
   { value: 'Échange', label: 'Échange' },
   { value: 'Expropriation', label: 'Expropriation' },
   { value: 'Adjudication', label: 'Adjudication' },
@@ -23,31 +25,49 @@ function FilterPanel({
   const [departements, setDepartements] = useState([])
   const [communes, setCommunes] = useState([])
 
-  // Charger les départements au montage
+  // État local pour stocker les modifs avant validation (Brouillon)
+  const [localFilters, setLocalFilters] = useState(filters);
+
+  // Sync avec le parent si besoin (ex: reset ou init)
+  useEffect(() => {
+    setLocalFilters(filters);
+  }, [filters]);
+
+  // Chargement initial des départements
   useEffect(() => {
     getDepartements()
-      .then(setDepartements)
-      .catch(() => setDepartements([]))
-  }, [])
+      .then(data => setDepartements(Array.isArray(data) ? data : []))
+      .catch((err) => {
+        console.error("Erreur service:", err);
+        setDepartements([]);
+      });
+  }, []);
 
-  // Charger les communes quand le département change
+  // Chargement des communes dès que le département du BROUILLON change
   useEffect(() => {
-    if (filters.departement) {
-      getCommunes(filters.departement)
+    if (localFilters.departement) {
+      getCommunes(localFilters.departement)
         .then(setCommunes)
         .catch(() => setCommunes([]))
     } else {
       setCommunes([])
     }
-  }, [filters.departement])
+  }, [localFilters.departement])
 
+  // Mise à jour du brouillon uniquement
   const updateFilter = (key, value) => {
     if (key === 'departement') {
-      onFiltersChange({ ...filters, departement: value, commune: '' })
+      setLocalFilters({ ...localFilters, departement: value, commune: '' })
     } else {
-      onFiltersChange({ ...filters, [key]: value })
+      setLocalFilters({ ...localFilters, [key]: value })
     }
   }
+
+  // Validation finale : on envoie le brouillon au parent pour l'API
+  const handleExplorerClick = () => {
+    onModeChange('explorer');
+    onFiltersChange(localFilters); 
+  };
 
   return (
     <div className="filter-panel">
@@ -56,14 +76,12 @@ function FilterPanel({
       <div className="filter-group">
         <label>Département</label>
         <select
-          value={filters.departement}
+          value={localFilters.departement || ''}
           onChange={(e) => updateFilter('departement', e.target.value)}
         >
           <option value="">Tous les départements</option>
           {departements.map((dep) => (
-            <option key={dep.code} value={dep.code}>
-              {dep.nom}
-            </option>
+            <option key={dep.code} value={dep.code}>{dep.nom}</option>
           ))}
         </select>
       </div>
@@ -71,15 +89,13 @@ function FilterPanel({
       <div className="filter-group">
         <label>Commune</label>
         <select
-          value={filters.commune}
+          value={localFilters.commune || ''}
           onChange={(e) => updateFilter('commune', e.target.value)}
-          disabled={!filters.departement}
+          disabled={!localFilters.departement}
         >
           <option value="">Toutes les communes</option>
           {communes.map((com) => (
-            <option key={com.code} value={com.code}>
-              {com.nom}
-            </option>
+            <option key={com.code} value={com.code}>{com.nom}</option>
           ))}
         </select>
       </div>
@@ -87,13 +103,11 @@ function FilterPanel({
       <div className="filter-group">
         <label>Type de mutation</label>
         <select
-          value={filters.typeMutation}
+          value={localFilters.typeMutation || ''}
           onChange={(e) => updateFilter('typeMutation', e.target.value)}
         >
           {TYPES_MUTATION.map((type) => (
-            <option key={type.value} value={type.value}>
-              {type.label}
-            </option>
+            <option key={type.value} value={type.value}>{type.label}</option>
           ))}
         </select>
       </div>
@@ -105,7 +119,7 @@ function FilterPanel({
             type="number"
             min="2014"
             max="2024"
-            value={filters.anneeDebut}
+            value={localFilters.anneeDebut || ''}
             onChange={(e) => updateFilter('anneeDebut', Number(e.target.value))}
             placeholder="Début"
           />
@@ -114,7 +128,7 @@ function FilterPanel({
             type="number"
             min="2014"
             max="2024"
-            value={filters.anneeFin}
+            value={localFilters.anneeFin || ''}
             onChange={(e) => updateFilter('anneeFin', Number(e.target.value))}
             placeholder="Fin"
           />
@@ -125,9 +139,10 @@ function FilterPanel({
 
       <h3 className="filter-title">Mode</h3>
       <div className="mode-toggle">
-        <button
-          className={mode === 'explorer' ? 'active' : ''}
-          onClick={() => onModeChange('explorer')}
+        {/* Le clic ici valide tous les filtres locaux */}
+        <button 
+          className={mode === 'explorer' ? 'active' : ''} 
+          onClick={handleExplorerClick}
         >
           Explorer
         </button>
@@ -152,9 +167,7 @@ function FilterPanel({
             >
               <option value="">Sélectionner...</option>
               {departements.map((dep) => (
-                <option key={dep.code} value={dep.code}>
-                  {dep.nom}
-                </option>
+                <option key={dep.code} value={dep.code}>{dep.nom}</option>
               ))}
             </select>
           </div>
@@ -169,9 +182,7 @@ function FilterPanel({
             >
               <option value="">Sélectionner...</option>
               {departements.map((dep) => (
-                <option key={dep.code} value={dep.code}>
-                  {dep.nom}
-                </option>
+                <option key={dep.code} value={dep.code}>{dep.nom}</option>
               ))}
             </select>
           </div>

@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client'
-
+import 'dotenv/config';
 const prismaClientSingleton = () => {
   return new PrismaClient()
 }

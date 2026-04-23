@@ -13,7 +13,7 @@ function HeatMapPage() {
     departement: '',
     commune: '',
     typeMutation: '',
-    anneeDebut: 2019,
+    anneeDebut: 2020,
     anneeFin: 2024,
   })
   const [territoireA, setTerritoireA] = useState(null)
@@ -22,9 +22,8 @@ function HeatMapPage() {
   return (
     <div className="page-container">
       
-      {/* BLOC DU HAUT (Filtres + Carte + Info) */}
+      {/* BLOC DU HAUT */}
       <div className="top-section">
-        
         <div className="filters-sidebar">
           <FilterPanel
             filters={filters}
@@ -51,18 +50,18 @@ function HeatMapPage() {
           )}
         </div>
 
-        {/* Le panneau est TOUJOURS là maintenant, comme tu le voulais ! */}
         {mode === 'explorer' && (
           <div className="info-sidebar">
             <InfoPanel commune={selectedCommune} />
           </div>
         )}
-        
       </div>
 
-      {/* BLOC DU BAS (Graphiques) */}
+      {/* BLOC DU BAS  */}
       <div className="bottom-section">
-        <DashboardGraphes />
+        {mode === 'explorer' && (
+          <DashboardGraphes filters={filters} />
+        )}
       </div>
 
     </div>

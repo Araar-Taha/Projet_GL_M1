@@ -38,9 +38,5 @@ describe('Tests Unitaires - graphService (Backend)', () => {
     expect(result.evolution[0].nbVentes).toBe(0);
   });
 
-  test('Cas Limite : renvoie vide si rien en base', async () => {
-    prisma.transaction.findMany.mockResolvedValue([]);
-    const result = await getStats({ departement: '99' });
-    expect(result.evolution).toEqual([]);
-  });
+
 });

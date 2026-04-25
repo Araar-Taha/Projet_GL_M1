@@ -1,7 +1,10 @@
 import { NavLink } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 import './Navbar.css'
 
 function Navbar() {
+  const { user, isAuthenticated } = useAuth()
+
   return (
     <nav className="navbar">
       <div className="navbar-brand">
@@ -18,9 +21,20 @@ function Navbar() {
             Classement
           </NavLink>
         </li>
+        {isAuthenticated && (
+          <li>
+            <NavLink to="/ajouter">
+              Ajouter des données
+            </NavLink>
+          </li>
+        )}
         <li>
-          <NavLink to="/auth">
-            Compte
+          <NavLink to="/auth" className="nav-account-link">
+            {isAuthenticated && user ? (
+              <span className="nav-avatar">{(user.prenom || user.nom || user.email || '?').charAt(0).toUpperCase()}</span>
+            ) : (
+              'Compte'
+            )}
           </NavLink>
         </li>
       </ul>

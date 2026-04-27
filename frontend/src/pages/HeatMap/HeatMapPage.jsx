@@ -41,7 +41,11 @@ function HeatMapPage() {
           {mode === 'explorer' ? (
             <MapView
               filters={filters}
-              onCommuneSelect={setSelectedCommune}
+              onCommuneSelect={(data) => {
+                setSelectedCommune(data);
+                // On synchronise le département sélectionné avec les filtres globaux
+                setFilters(prev => ({ ...prev, departement: data.code }));
+              }}
             />
           ) : (
             <CompareView

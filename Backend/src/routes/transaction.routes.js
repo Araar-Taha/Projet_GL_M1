@@ -4,19 +4,106 @@ import { authenticateToken } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
 
-// @route   POST /api/transactions
-// @desc    Add a new real estate transaction
-// @access  Private
+// GET /api/mutations (ou /api/transactions)
+// Supporte les filtres : departement, commune, anneeDebut, anneeFin, typeMutation
+router.get('/', async (req, res) => {
+    try {
+        const { departement, commune, typeMutation, anneeDebut, anneeFin } = req.query;
+        
+        const where = {};
+        
+        if (commune) {
+            where.code_postal = commune;
+        } else if (departement) {
+            where.code_postal = { startsWith: departement };
+        }
+
+        if (typeMutation) {
+            where.type_transaction = typeMutation;
+        }
+
+        if (anneeDebut || anneeFin) {
+            where.annee = {
+                gte: parseInt(anneeDebut) || 2014,
+                lte: parseInt(anneeFin) || 2024
+            };
+        }
+
+        const transactions = await prisma.transaction.findMany({
+            where,
+            take: 200,
+            orderBy: { annee: 'desc' }
+        });
+        
+        res.json(transactions);
+    } catch (error) {
+        console.error('Fetch transactions error:', error);
+        res.status(500).json({ error: 'Erreur lors de la récupération des transactions' });
+    }
+});
+
+// GET /api/mutations/stats/:code
+router.get('/stats/:code', async (req, res) => {
+    const { code } = req.params;
+    try {
+        const where = code.length <= 3 
+            ? { code_postal: { startsWith: code } }
+            : { code_postal: code };
+
+        const stats = await prisma.transaction.aggregate({
+            where,
+            _avg: { valeur_fonciere: true },
+            _sum: { nombre_mutation: true },
+            _count: { identifiant: true }
+        });
+
+        res.json({
+            prixMoyen: Math.round(stats._avg.valeur_fonciere || 0),
+            totalVentes: stats._sum.nombre_mutation || 0,
+            nombreTransactions: stats._count.identifiant
+        });
+    } catch (error) {
+        console.error('Stats error:', error);
+        res.status(500).json({ error: 'Erreur stats' });
+    }
+});
+
+// GET /api/mutations/prix-evolution/:code
+router.get('/prix-evolution/:code', async (req, res) => {
+    const { code } = req.params;
+    try {
+        const where = code.length <= 3 
+            ? { code_postal: { startsWith: code } }
+            : { code_postal: code };
+
+        const data = await prisma.transaction.groupBy({
+            by: ['annee'],
+            where,
+            _avg: { valeur_fonciere: true },
+            orderBy: { annee: 'asc' }
+        });
+
+        const formatted = data.map(item => ({
+            annee: item.annee,
+            prixMoyen: Math.round(item._avg.valeur_fonciere || 0)
+        }));
+
+        res.json(formatted);
+    } catch (error) {
+        console.error('Evolution error:', error);
+        res.status(500).json({ error: 'Erreur evolution' });
+    }
+});
+
+// POST /api/transactions
+// @access Private
 router.post('/', authenticateToken, async (req, res) => {
     try {
         const { type_transaction, valeur_fonciere, nombre_mutation, annee, code_postal } = req.body;
-
-        // Basic validation
         if (!type_transaction || valeur_fonciere === undefined || nombre_mutation === undefined || !annee || !code_postal) {
             return res.status(400).json({ error: 'Tous les champs sont requis' });
         }
 
-        // Insert into database
         const newTransaction = await prisma.transaction.create({
             data: {
                 type_transaction,
@@ -28,26 +115,9 @@ router.post('/', authenticateToken, async (req, res) => {
         });
 
         res.status(201).json({ message: 'Donnée foncière ajoutée avec succès', transaction: newTransaction });
-
     } catch (error) {
         console.error('Add transaction error:', error);
         res.status(500).json({ error: 'Erreur lors de l\'ajout de la donnée foncière' });
-    }
-});
-
-// @route   GET /api/transactions
-// @desc    Get all real estate transactions (limit 100 for performance)
-// @access  Public
-router.get('/', async (req, res) => {
-    try {
-        const transactions = await prisma.transaction.findMany({
-            take: 100,
-            orderBy: { identifiant: 'desc' }, // Get newest first
-        });
-        res.json(transactions);
-    } catch (error) {
-        console.error('Fetch transactions error:', error);
-        res.status(500).json({ error: 'Erreur lors de la récupération des transactions' });
     }
 });
 

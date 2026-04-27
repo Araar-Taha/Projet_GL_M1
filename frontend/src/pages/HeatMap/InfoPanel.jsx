@@ -42,27 +42,7 @@ function InfoPanel({ commune }) {
       <h3 className="commune-name">{commune.nom}</h3>
       <span className="info-code">Code : {commune.code}</span>
 
-      {stats && (
-        <div className="stats-grid">
-          <div className="stat-card">
-            <span className="stat-value">{stats.population?.toLocaleString() ?? '—'}</span>
-            <span className="stat-label">Population</span>
-          </div>
-          <div className="stat-card">
-            <span className="stat-value">{stats.mutations?.toLocaleString() ?? '—'}</span>
-            <span className="stat-label">Mutations</span>
-          </div>
-          <div className="stat-card">
-            <span className="stat-value">{stats.prixMoyen ? `${stats.prixMoyen.toLocaleString()} €/m²` : '—'}</span>
-            <span className="stat-label">Val. moy. m²</span>
-          </div>
-          <div className="stat-card">
-            <span className="stat-value">{stats.surfaceMoyenne ? `${stats.surfaceMoyenne} m²` : '—'}</span>
-            <span className="stat-label">Surface moy.</span>
-          </div>
-        </div>
-      )}
-
+      
       <div className="info-charts">
         {prixData.length > 0 && (
           <div className="chart-section">

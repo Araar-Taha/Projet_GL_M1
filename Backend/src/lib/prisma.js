@@ -1,13 +1,12 @@
 import 'dotenv/config'
 import { PrismaClient } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
-
-// Prisma v7 : l'engine "client" exige un driver adapter.
-// On passe DATABASE_URL directement au Pool pg.
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL })
+import pg from 'pg'
 
 const prismaClientSingleton = () => {
-  return new PrismaClient({ adapter })
+    const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL })
+    const adapter = new PrismaPg(pool)
+    return new PrismaClient({ adapter })
 }
 
 const globalForPrisma = globalThis

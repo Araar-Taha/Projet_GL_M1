@@ -1,38 +1,125 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../../context/AuthContext'
 import './AuthPage.css'
 
 function AuthPage() {
   const navigate = useNavigate()
+  const { user, isAuthenticated, loading, login, register, logout, updateProfile, changePassword, deleteAccount } = useAuth()
   const [view, setView] = useState('login')
   const [isAuthenticating, setIsAuthenticating] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
   const [formData, setFormData] = useState({
-    username: 'Hakim',
-    email: 'hakim@example.com',
-    password: ''
+    nom: '',
+    prenom: '',
+    email: '',
+    mot_de_pass: '',
   })
+  const [passwordData, setPasswordData] = useState({
+    ancien_mot_de_pass: '',
+    nouveau_mot_de_pass: '',
+  })
+  const [editMode, setEditMode] = useState(false)
+  const [passwordMode, setPasswordMode] = useState(false)
+  const [editData, setEditData] = useState({ nom: '', prenom: '', email: '' })
 
-  // Redirect if "entering" the account
-  const handleAuthSuccess = () => {
+  // Switch to profile view when authenticated
+  useEffect(() => {
+    if (isAuthenticated && !isAuthenticating) {
+      setView('profile')
+    }
+  }, [isAuthenticated, isAuthenticating])
+
+  // Pre-fill edit form when user changes
+  useEffect(() => {
+    if (user) {
+      setEditData({ nom: user.nom || '', prenom: user.prenom || '', email: user.email || '' })
+    }
+  }, [user])
+
+  const handleLogin = async (e) => {
+    e.preventDefault()
+    setError('')
     setIsAuthenticating(true)
-    setTimeout(() => {
-      navigate('/')
-    }, 1500)
+    try {
+      await login({ email: formData.email, mot_de_pass: formData.mot_de_pass })
+      setTimeout(() => {
+        setIsAuthenticating(false)
+        navigate('/')
+      }, 1200)
+    } catch (err) {
+      setIsAuthenticating(false)
+      setError(err.response?.data?.error || 'Erreur de connexion')
+    }
   }
 
-  const handleLogin = (e) => {
+  const handleSignup = async (e) => {
     e.preventDefault()
-    handleAuthSuccess()
-  }
-
-  const handleSignup = (e) => {
-    e.preventDefault()
-    handleAuthSuccess()
+    setError('')
+    setIsAuthenticating(true)
+    try {
+      await register({
+        nom: formData.nom,
+        prenom: formData.prenom,
+        email: formData.email,
+        mot_de_pass: formData.mot_de_pass,
+      })
+      setTimeout(() => {
+        setIsAuthenticating(false)
+        navigate('/')
+      }, 1200)
+    } catch (err) {
+      setIsAuthenticating(false)
+      setError(err.response?.data?.error || 'Erreur lors de l\'inscription')
+    }
   }
 
   const handleLogout = () => {
-    // For demo purposes, we stay on this page
+    logout()
     setView('login')
+    setFormData({ nom: '', prenom: '', email: '', mot_de_pass: '' })
+    setSuccess('')
+    setError('')
+  }
+
+  const handleUpdateProfile = async (e) => {
+    e.preventDefault()
+    setError('')
+    setSuccess('')
+    try {
+      await updateProfile(editData)
+      setEditMode(false)
+      setSuccess('Profil mis à jour !')
+    } catch (err) {
+      setError(err.response?.data?.error || 'Erreur lors de la mise à jour')
+    }
+  }
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault()
+    setError('')
+    setSuccess('')
+    try {
+      await changePassword(passwordData)
+      setPasswordData({ ancien_mot_de_pass: '', nouveau_mot_de_pass: '' })
+      setPasswordMode(false)
+      setSuccess('Mot de passe modifié !')
+    } catch (err) {
+      setError(err.response?.data?.error || 'Erreur lors du changement de mot de passe')
+    }
+  }
+
+  const handleDeleteAccount = async () => {
+    if (!window.confirm('Êtes-vous sûr de vouloir supprimer votre compte ? Cette action est irréversible.')) return
+    try {
+      await deleteAccount()
+      setView('login')
+      setFormData({ nom: '', prenom: '', email: '', mot_de_pass: '' })
+      setSuccess('Compte supprimé')
+    } catch (err) {
+      setError(err.response?.data?.error || 'Erreur lors de la suppression')
+    }
   }
 
   const BuildingsSVG = () => (
@@ -60,6 +147,21 @@ function AuthPage() {
     </svg>
   )
 
+  if (loading) {
+    return (
+      <div className="auth-split-container">
+        <section className="auth-form-wrapper" style={{ flex: 1 }}>
+          <div className="auth-card">
+            <div className="auth-loading">
+              <div className="loader"></div>
+              <h3>Chargement...</h3>
+            </div>
+          </div>
+        </section>
+      </div>
+    )
+  }
+
   return (
     <div className="auth-split-container">
       <section className="auth-hero">
@@ -67,7 +169,7 @@ function AuthPage() {
           <h1>Explorez les données foncières, <span className="text-gradient">simplement.</span></h1>
           <p>
             Accédez aux prix de vente réels, analysez les tendances du marché et
-            Zidou mn 3ndkoul a chkoupi.
+            prenez des décisions éclairées.
           </p>
         </div>
 
@@ -84,45 +186,116 @@ function AuthPage() {
               <h3>Connexion en cours...</h3>
               <p>Préparation de votre espace DVF Explorer</p>
             </div>
-          ) : view === 'profile' ? (
+          ) : view === 'profile' && user ? (
             <div className="profile-view">
               <div className="profile-avatar">
-                {formData.username.charAt(0)}
+                {(user.prenom || user.nom || user.email || '?').charAt(0).toUpperCase()}
               </div>
               <div className="profile-header">
-                <h2>Bienvenue, {formData.username}</h2>
-                <p>{formData.email}</p>
+                <h2>Bienvenue, {user.prenom || user.nom || 'Utilisateur'}</h2>
+                <p>{user.email}</p>
               </div>
-              <div className="profile-actions">
-                <button className="btn-secondary" onClick={() => alert('Modification simulée !')}>Modifier le profil</button>
-                <button className="btn-danger" onClick={handleLogout}>Se déconnecter</button>
-                <button className="btn-text btn-delete" onClick={() => { if (window.confirm('Supprimer ce compte fictif ?')) handleLogout() }}>Supprimer le compte</button>
-              </div>
+
+              {error && <div className="auth-error">{error}</div>}
+              {success && <div className="auth-success">{success}</div>}
+
+              {editMode ? (
+                <form className="auth-form" onSubmit={handleUpdateProfile}>
+                  <div className="form-group">
+                    <label>Nom</label>
+                    <input type="text" value={editData.nom} onChange={(e) => setEditData({ ...editData, nom: e.target.value })} />
+                  </div>
+                  <div className="form-group">
+                    <label>Prénom</label>
+                    <input type="text" value={editData.prenom} onChange={(e) => setEditData({ ...editData, prenom: e.target.value })} />
+                  </div>
+                  <div className="form-group">
+                    <label>Email</label>
+                    <input type="email" value={editData.email} onChange={(e) => setEditData({ ...editData, email: e.target.value })} required />
+                  </div>
+                  <div className="profile-actions-row">
+                    <button type="submit" className="btn-primary">Sauvegarder</button>
+                    <button type="button" className="btn-secondary" onClick={() => setEditMode(false)}>Annuler</button>
+                  </div>
+                </form>
+              ) : passwordMode ? (
+                  <form className="auth-form" onSubmit={handleChangePassword}>
+                    <h4 style={{ marginBottom: '1.5rem', fontSize: '1.2rem', textAlign: 'center' }}>Sécurité</h4>
+                    <div className="form-group">
+                      <label>Ancien mot de passe</label>
+                      <input type="password" value={passwordData.ancien_mot_de_pass} onChange={(e) => setPasswordData({ ...passwordData, ancien_mot_de_pass: e.target.value })} required />
+                    </div>
+                    <div className="form-group">
+                      <label>Nouveau mot de passe</label>
+                      <input type="password" value={passwordData.nouveau_mot_de_pass} onChange={(e) => setPasswordData({ ...passwordData, nouveau_mot_de_pass: e.target.value })} required />
+                    </div>
+                    <div className="profile-actions-row">
+                      <button type="submit" className="btn-primary">Valider</button>
+                      <button type="button" className="btn-secondary" onClick={() => setPasswordMode(false)}>Annuler</button>
+                    </div>
+                  </form>
+              ) : (
+                <div className="profile-details-card">
+                  <div className="info-list">
+                    <div className="info-item">
+                      <span className="info-label">Nom</span>
+                      <span className="info-value">{user.nom || <span className="text-muted">Non renseigné</span>}</span>
+                    </div>
+                    <div className="info-item">
+                      <span className="info-label">Prénom</span>
+                      <span className="info-value">{user.prenom || <span className="text-muted">Non renseigné</span>}</span>
+                    </div>
+                    <div className="info-item">
+                      <span className="info-label">Email</span>
+                      <span className="info-value">{user.email}</span>
+                    </div>
+                  </div>
+
+                  <div className="profile-actions-grid">
+                    <button className="btn-secondary" onClick={() => setEditMode(true)}>Modifier le profil</button>
+                    <button className="btn-secondary" onClick={() => setPasswordMode(true)}>Changer le mot de passe</button>
+                    <button className="btn-outline-primary" onClick={handleLogout}>Se déconnecter</button>
+                  </div>
+
+                  <div className="profile-danger-zone">
+                    <button className="btn-text btn-delete" onClick={handleDeleteAccount}>Supprimer mon compte</button>
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <div className="auth-form-container">
               <div className="auth-tabs">
-                <button className={view === 'login' ? 'active' : ''} onClick={() => setView('login')}>Connexion</button>
-                <button className={view === 'signup' ? 'active' : ''} onClick={() => setView('signup')}>Inscription</button>
+                <button className={view === 'login' ? 'active' : ''} onClick={() => { setView('login'); setError('') }}>Connexion</button>
+                <button className={view === 'signup' ? 'active' : ''} onClick={() => { setView('signup'); setError('') }}>Inscription</button>
               </div>
+
+              {error && <div className="auth-error">{error}</div>}
+
               <form className="auth-form" onSubmit={view === 'login' ? handleLogin : handleSignup}>
                 <h3>{view === 'login' ? 'Bon retour !' : 'Créer un compte'}</h3>
                 <p className="auth-subtitle">
                   {view === 'login' ? 'Accédez à votre espace personnel.' : 'Rejoignez-nous dès maintenant.'}
                 </p>
-                <div className="form-group">
-                  <label>Nom d'utilisateur</label>
-                  <input type="text" value={formData.username} onChange={(e) => setFormData({ ...formData, username: e.target.value })} placeholder="Ex: Hakim" required />
-                </div>
                 {view === 'signup' && (
-                  <div className="form-group">
-                    <label>Email</label>
-                    <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} placeholder="votre@email.com" required />
-                  </div>
+                  <>
+                    <div className="form-group">
+                      <label>Nom</label>
+                      <input type="text" value={formData.nom} onChange={(e) => setFormData({ ...formData, nom: e.target.value })} placeholder="Votre nom" />
+                    </div>
+                    <div className="form-group">
+                      <label>Prénom</label>
+                      <input type="text" value={formData.prenom} onChange={(e) => setFormData({ ...formData, prenom: e.target.value })} placeholder="Votre prénom" />
+                    </div>
+                  </>
                 )}
                 <div className="form-group">
+                  <label>Email</label>
+                  <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} placeholder="votre@email.com" required />
+                </div>
+                <div className="form-group">
                   <label>Mot de passe</label>
-                  <input type="password" placeholder="••••••••" required />
+                  <input type="password" value={formData.mot_de_pass} onChange={(e) => setFormData({ ...formData, mot_de_pass: e.target.value })} placeholder="••••••••" required />
                 </div>
                 <button type="submit" className="btn-primary">{view === 'login' ? 'Se connecter' : "S'inscrire"}</button>
               </form>

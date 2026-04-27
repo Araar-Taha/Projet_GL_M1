@@ -6,4 +6,14 @@ const api = axios.create({
   baseURL: API_BASE_URL,
 })
 
+// Injecter le token dans chaque requête si présent
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('dvf_token')
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
+})
+
 export default api
+

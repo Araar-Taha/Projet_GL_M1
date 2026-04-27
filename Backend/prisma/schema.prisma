@@ -4,8 +4,8 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
+
 
 model localisation {
   identifiant      Int     @id @default(autoincrement())
@@ -45,3 +45,9 @@ model utilisateur {
   mot_de_pass   String?
   date_creation DateTime? @default(now()) @db.Timestamp(6)
 }
+
+model departement {
+  code String @id @db.VarChar(10)
+  nom  String @db.VarChar(100)
+}
+

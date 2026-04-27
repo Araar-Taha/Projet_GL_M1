@@ -1,32 +1,76 @@
-import { MapContainer, TileLayer, GeoJSON } from 'react-leaflet'
+import { MapContainer, TileLayer, GeoJSON, useMap } from 'react-leaflet'
 import { useState, useEffect } from 'react'
-import { getMutationsStats } from '../../services/mutations.service'
+import { getMutationsStats, getStatsByDept } from '../../services/mutations.service'
+import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import './MapView.css'
 
-function getColor(intensity) {
+// Composant interne pour gérer le zoom automatique
+function AutoZoom({ filters, geoData }) {
+  const map = useMap()
+
+  useEffect(() => {
+    if (!filters.departement || !geoData) return
+
+    // Trouver la feature du département sélectionné
+    const feature = geoData.features.find(f => f.properties.code === filters.departement)
+    if (feature) {
+      // Créer un layer temporaire pour obtenir les bounds
+      const layer = L.geoJSON(feature)
+      map.fitBounds(layer.getBounds(), { padding: [20, 20], animate: true })
+    }
+  }, [filters.departement, geoData, map])
+
+  return null
+}
+
+function getColor(count, maxCount) {
+  if (!count) return '#f8fafc' // Gris très clair si pas de données
+  
+  const intensity = count / maxCount
   const colors = [
-    '#e2dfff', '#c3c0ff', '#a4a0ff', '#7c73ed', '#6359d8', '#4F46E5', '#3525cd',
+    '#e2dfff', // Niveau 0
+    '#c3c0ff', // Niveau 1
+    '#a4a0ff', // Niveau 2
+    '#7c73ed', // Niveau 3
+    '#6366f1', // Niveau 4
+    '#4f46e5', // Niveau 5
+    '#3730a3', // Niveau 6
   ]
+  
   const index = Math.min(Math.floor(intensity * colors.length), colors.length - 1)
   return colors[index]
 }
 
 function MapView({ filters, onCommuneSelect }) {
   const [geoData, setGeoData] = useState(null)
+  const [intensityStats, setIntensityStats] = useState({})
+  const [maxCount, setMaxCount] = useState(1)
   const [loading, setLoading] = useState(false)
 
-  // Charger le GeoJSON des départements
+  // 1. Charger le GeoJSON des départements
   useEffect(() => {
     fetch('https://raw.githubusercontent.com/gregoiredavid/france-geojson/master/departements.geojson')
       .then((res) => res.json())
       .then((data) => setGeoData(data))
   }, [])
 
+  // 2. Charger les vraies stats d'intensité depuis le Backend
+  useEffect(() => {
+    getStatsByDept().then(stats => {
+      setIntensityStats(stats)
+      const counts = Object.values(stats)
+      if (counts.length > 0) {
+        setMaxCount(Math.max(...counts))
+      }
+    }).catch(err => console.error("Map intensity error:", err))
+  }, [])
+
   const onEachFeature = (feature, layer) => {
     const { nom, code } = feature.properties
+    const count = intensityStats[code] || 0
 
-    layer.bindTooltip(`${nom} (${code})`, {
+    layer.bindTooltip(`<b>${nom} (${code})</b><br/>${count} ventes répertoriées`, {
       sticky: true,
       className: 'map-tooltip',
     })
@@ -38,7 +82,6 @@ function MapView({ filters, onCommuneSelect }) {
         onCommuneSelect({
           code,
           nom,
-          population: 'N/A', // Sera complété par un autre appel si besoin
           prixM2: stats.prixMoyen,
           ventes: stats.totalVentes,
           transactions: stats.nombreTransactions
@@ -51,22 +94,23 @@ function MapView({ filters, onCommuneSelect }) {
     })
 
     layer.on('mouseover', () => {
-      layer.setStyle({ fillOpacity: 0.9, weight: 2, color: '#1a72ff' })
+      layer.setStyle({ fillOpacity: 0.9, weight: 3, color: '#4F46E5' })
     })
     layer.on('mouseout', () => {
-      layer.setStyle({ fillOpacity: 0.6, weight: 1, color: '#ffffff' })
+      layer.setStyle({ fillOpacity: 0.7, weight: 1, color: '#ffffff' })
     })
   }
 
   const style = (feature) => {
-    // Pour l'instant, on garde une intensité basée sur le code pour la couleur 
-    // tant qu'on n'a pas une route backend "map-intensity" globale
-    const intensity = (parseInt(feature.properties.code, 10) % 20) / 20
+    const code = feature.properties.code
+    const count = intensityStats[code] || 0
+    const isSelected = filters.departement === code
+
     return {
-      fillColor: getColor(intensity),
-      weight: 1,
-      color: '#ffffff',
-      fillOpacity: 0.6,
+      fillColor: getColor(count, maxCount),
+      weight: isSelected ? 3 : 1,
+      color: isSelected ? '#4F46E5' : '#ffffff',
+      fillOpacity: isSelected ? 0.9 : 0.7,
     }
   }
 
@@ -76,26 +120,30 @@ function MapView({ filters, onCommuneSelect }) {
         center={[46.6, 2.5]}
         zoom={6}
         className="leaflet-map"
-        zoomControl={false}
+        zoomControl={true}
       >
         <TileLayer
           attribution='&copy; OSM'
           url="https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png"
         />
+        
         {geoData && (
-          <GeoJSON
-            key={JSON.stringify(filters)}
-            data={geoData}
-            style={style}
-            onEachFeature={onEachFeature}
-          />
+          <>
+            <GeoJSON
+              key={`map-${maxCount}-${filters.departement}`}
+              data={geoData}
+              style={style}
+              onEachFeature={onEachFeature}
+            />
+            <AutoZoom filters={filters} geoData={geoData} />
+          </>
         )}
       </MapContainer>
 
       <div className="map-legend">
-        <span className="legend-label">Faible</span>
+        <span className="legend-label">Forte densité</span>
         <div className="legend-gradient" />
-        <span className="legend-label">Élevé</span>
+        <span className="legend-label">Faible densité</span>
       </div>
       
       {loading && <div className="map-loader">Chargement des données...</div>}
@@ -104,4 +152,3 @@ function MapView({ filters, onCommuneSelect }) {
 }
 
 export default MapView
-

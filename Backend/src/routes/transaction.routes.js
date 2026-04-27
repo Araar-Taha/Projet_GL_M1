@@ -121,4 +121,29 @@ router.post('/', authenticateToken, async (req, res) => {
     }
 });
 
+// GET /api/transactions/stats-by-dept
+// Retourne le nombre de transactions par département (basé sur les 2 premiers chiffres du code_postal)
+router.get('/stats-by-dept', async (req, res) => {
+    try {
+        // On effectue une requête brute car Prisma ne supporte pas nativement les GROUP BY sur substring
+        const stats = await prisma.$queryRaw`
+            SELECT LEFT(code_postal, 2) as code, COUNT(*)::int as count
+            FROM transaction
+            GROUP BY LEFT(code_postal, 2)
+        `;
+        
+        // Transformer le tableau en objet { "75": 120, "13": 80, ... }
+        const statsObject = stats.reduce((acc, curr) => {
+            acc[curr.code] = curr.count;
+            return acc;
+        }, {});
+
+        res.json(statsObject);
+    } catch (error) {
+        console.error('Stats by dept error:', error);
+        res.status(500).json({ error: 'Erreur lors du calcul des stats par département' });
+    }
+});
+
+
 export default router;

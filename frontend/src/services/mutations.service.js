@@ -14,3 +14,9 @@ export async function getPrixEvolution(codeTerritoire) {
   const response = await api.get(`/mutations/prix-evolution/${codeTerritoire}`)
   return response.data
 }
+
+export async function getStatsByDept() {
+  const response = await api.get('/transactions/stats-by-dept')
+  return response.data
+}
+

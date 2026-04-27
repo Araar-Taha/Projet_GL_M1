@@ -10,10 +10,13 @@ export async function getMutationsStats(codeTerritoire) {
   return response.data
 }
 
-export async function getPrixEvolution(codeTerritoire) {
-  const response = await api.get(`/mutations/prix-evolution/${codeTerritoire}`)
+export async function getPrixEvolution(codeTerritoire, typeMutation) {
+  const response = await api.get(`/mutations/prix-evolution/${codeTerritoire}`, {
+    params: { typeMutation }
+  })
   return response.data
 }
+
 
 export async function getStatsByDept() {
   const response = await api.get('/transactions/stats-by-dept')

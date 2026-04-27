@@ -24,7 +24,9 @@ const DashboardGraphes = ({ filters }) => {
           fin: filters.anneeFin || 2024
         }).toString();
         
-        const response = await axios.get(`http://localhost:5000/api/graphs/all?${query}`);
+        // On utilise l'URL relative car Axios est configuré dans api.js 
+        // ou on met 5001 si on utilise axios en direct
+        const response = await axios.get(`http://localhost:5001/api/graphs/all?${query}`);
         setData(response.data);
       } catch (error) {
         console.error("Erreur API Dashboard:", error);

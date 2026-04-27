@@ -93,10 +93,15 @@ router.get('/stats/:code', async (req, res) => {
 // GET /api/mutations/prix-evolution/:code
 router.get('/prix-evolution/:code', async (req, res) => {
     const { code } = req.params;
+    const { typeMutation } = req.query;
     try {
         const where = code.length <= 3 
             ? { code_postal: { startsWith: code } }
             : { code_postal: code };
+
+        if (typeMutation) {
+            where.type_transaction = typeMutation;
+        }
 
         const data = await prisma.transaction.groupBy({
             by: ['annee'],

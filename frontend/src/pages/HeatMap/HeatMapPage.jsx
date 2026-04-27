@@ -38,17 +38,19 @@ function HeatMapPage() {
         </div>
 
         <div className="heatmap-center">
-          <MapView
-            filters={filters}
-            onCommuneSelect={setSelectedCommune}
-          />
-          {mode === 'comparer' && territoireA && territoireB && (
+          {mode === 'explorer' ? (
+            <MapView
+              filters={filters}
+              onCommuneSelect={setSelectedCommune}
+            />
+          ) : (
             <CompareView
               territoireA={territoireA}
               territoireB={territoireB}
             />
           )}
         </div>
+
 
         {mode === 'explorer' && (
           <div className="info-sidebar">

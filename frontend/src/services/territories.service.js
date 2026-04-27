@@ -10,7 +10,9 @@ export async function getCommunes(codeDepartement) {
   return response.data
 }
 
-export async function getCommuneInfo(codeCommune) {
-  const response = await api.get(`/territoires/communes/${codeCommune}`)
+// Pour obtenir les infos de base d'une commune ou d'un département
+export async function getCommuneInfo(code) {
+  // On essaye d'abord de voir si c'est un département ou une commune
+  const response = await api.get(`/mutations/stats/${code}`)
   return response.data
 }

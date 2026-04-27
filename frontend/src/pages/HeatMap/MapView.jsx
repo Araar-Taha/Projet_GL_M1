@@ -1,18 +1,12 @@
 import { MapContainer, TileLayer, GeoJSON } from 'react-leaflet'
 import { useState, useEffect } from 'react'
+import { getMutationsStats } from '../../services/mutations.service'
 import 'leaflet/dist/leaflet.css'
 import './MapView.css'
 
-// Fonction pour calculer la couleur selon l'intensité (0 à 1)
 function getColor(intensity) {
   const colors = [
-    '#e2dfff', // très faible
-    '#c3c0ff', // faible
-    '#a4a0ff', // moyen-faible
-    '#7c73ed', // moyen
-    '#6359d8', // moyen-fort
-    '#4F46E5', // fort
-    '#3525cd', // très fort
+    '#e2dfff', '#c3c0ff', '#a4a0ff', '#7c73ed', '#6359d8', '#4F46E5', '#3525cd',
   ]
   const index = Math.min(Math.floor(intensity * colors.length), colors.length - 1)
   return colors[index]
@@ -20,14 +14,9 @@ function getColor(intensity) {
 
 function MapView({ filters, onCommuneSelect }) {
   const [geoData, setGeoData] = useState(null)
+  const [loading, setLoading] = useState(false)
 
-  const mockTerritories = [
-    { code: '75', nom: 'Paris', population: 2161000, prixM2: 11000, ventes: 14000 },
-    { code: '34', nom: 'Hérault', population: 1180000, prixM2: 3600, ventes: 6200 },
-    { code: '59', nom: 'Nord', population: 2600000, prixM2: 2200, ventes: 8100 },
-    { code: '13', nom: 'Bouches-du-Rhône', population: 2060000, prixM2: 4200, ventes: 9600 },
-  ]
-
+  // Charger le GeoJSON des départements
   useEffect(() => {
     fetch('https://raw.githubusercontent.com/gregoiredavid/france-geojson/master/departements.geojson')
       .then((res) => res.json())
@@ -35,27 +24,34 @@ function MapView({ filters, onCommuneSelect }) {
   }, [])
 
   const onEachFeature = (feature, layer) => {
-    const nom = feature.properties.nom
-    const code = feature.properties.code
+    const { nom, code } = feature.properties
 
-    // Tooltip au survol
     layer.bindTooltip(`${nom} (${code})`, {
       sticky: true,
       className: 'map-tooltip',
     })
 
-    // Clic → sélection
-    layer.on('click', () => {
-      const mock = mockTerritories.find((item) => item.code === code)
-      const selection = mock || { code, nom, population: null, prixM2: null, ventes: null }
-      if (onCommuneSelect) {
-        onCommuneSelect(selection)
+    layer.on('click', async () => {
+      setLoading(true)
+      try {
+        const stats = await getMutationsStats(code)
+        onCommuneSelect({
+          code,
+          nom,
+          population: 'N/A', // Sera complété par un autre appel si besoin
+          prixM2: stats.prixMoyen,
+          ventes: stats.totalVentes,
+          transactions: stats.nombreTransactions
+        })
+      } catch (err) {
+        console.error('Error fetching stats for map click:', err)
+      } finally {
+        setLoading(false)
       }
     })
 
-    // Hover effect
     layer.on('mouseover', () => {
-      layer.setStyle({ fillOpacity: 0.92, weight: 2, color: '#1a72ff' })
+      layer.setStyle({ fillOpacity: 0.9, weight: 2, color: '#1a72ff' })
     })
     layer.on('mouseout', () => {
       layer.setStyle({ fillOpacity: 0.6, weight: 1, color: '#ffffff' })
@@ -63,10 +59,11 @@ function MapView({ filters, onCommuneSelect }) {
   }
 
   const style = (feature) => {
-    // Intensité mockée basée sur le code département
-    const mockIntensity = (parseInt(feature.properties.code, 10) % 20) / 20
+    // Pour l'instant, on garde une intensité basée sur le code pour la couleur 
+    // tant qu'on n'a pas une route backend "map-intensity" globale
+    const intensity = (parseInt(feature.properties.code, 10) % 20) / 20
     return {
-      fillColor: getColor(mockIntensity),
+      fillColor: getColor(intensity),
       weight: 1,
       color: '#ffffff',
       fillOpacity: 0.6,
@@ -74,7 +71,7 @@ function MapView({ filters, onCommuneSelect }) {
   }
 
   return (
-    <div className="map-container">
+    <div className={`map-container ${loading ? 'loading-map' : ''}`}>
       <MapContainer
         center={[46.6, 2.5]}
         zoom={6}
@@ -82,7 +79,7 @@ function MapView({ filters, onCommuneSelect }) {
         zoomControl={false}
       >
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
+          attribution='&copy; OSM'
           url="https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png"
         />
         {geoData && (
@@ -95,14 +92,16 @@ function MapView({ filters, onCommuneSelect }) {
         )}
       </MapContainer>
 
-      {/* Légende */}
       <div className="map-legend">
         <span className="legend-label">Faible</span>
         <div className="legend-gradient" />
         <span className="legend-label">Élevé</span>
       </div>
+      
+      {loading && <div className="map-loader">Chargement des données...</div>}
     </div>
   )
 }
 
 export default MapView
+

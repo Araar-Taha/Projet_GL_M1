@@ -15,11 +15,11 @@ function PriceEvolutionChart({ data }) {
         />
         <Line
           type="monotone"
-          dataKey="prix"
+          dataKey="prixMoyen"
           stroke="#4F46E5"
-          strokeWidth={2}
-          dot={{ r: 3, fill: '#4F46E5' }}
-          activeDot={{ r: 5 }}
+          strokeWidth={3}
+          dot={{ r: 4, fill: '#4F46E5', strokeWidth: 2, stroke: '#fff' }}
+          activeDot={{ r: 6 }}
         />
       </LineChart>
     </ResponsiveContainer>

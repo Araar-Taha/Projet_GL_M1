@@ -8,12 +8,12 @@ function AgeDistributionChart({ data }) {
       <BarChart data={data} layout="vertical">
         <CartesianGrid strokeDasharray="3 3" stroke="#e8e8e8" horizontal={false} />
         <XAxis type="number" tick={{ fontSize: 11 }} unit="%" />
-        <YAxis dataKey="tranche" type="category" tick={{ fontSize: 11 }} width={40} />
+        <YAxis dataKey="label" type="category" tick={{ fontSize: 11 }} width={70} />
         <Tooltip
           formatter={(value) => [`${value}%`, 'Part']}
           contentStyle={{ borderRadius: 8, border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.06)' }}
         />
-        <Bar dataKey="pourcentage" fill="#4F46E5" radius={[0, 4, 4, 0]} />
+        <Bar dataKey="value" fill="#4F46E5" radius={[0, 4, 4, 0]} />
       </BarChart>
     </ResponsiveContainer>
   )

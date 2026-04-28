@@ -12,12 +12,21 @@ function AutoZoom({ filters, geoData }) {
   useEffect(() => {
     if (!filters.departement || !geoData) return
 
+    // Normalisation du code (ex: "8" -> "08")
+    const targetCode = filters.departement.toString().padStart(2, '0')
+    
     // Trouver la feature du département sélectionné
-    const feature = geoData.features.find(f => f.properties.code === filters.departement)
+    const feature = geoData.features.find(f => f.properties.code === targetCode)
+    
     if (feature) {
-      // Créer un layer temporaire pour obtenir les bounds
       const layer = L.geoJSON(feature)
-      map.fitBounds(layer.getBounds(), { padding: [20, 20], animate: true })
+      const bounds = layer.getBounds()
+      
+      if (bounds.isValid()) {
+        map.fitBounds(bounds, { padding: [30, 30], animate: true, duration: 1 })
+      }
+    } else {
+      console.warn("AutoZoom: Département non trouvé dans le GeoJSON", targetCode)
     }
   }, [filters.departement, geoData, map])
 

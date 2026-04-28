@@ -20,3 +20,4 @@ Thumbs.db
 *.swp
 *.swo
 *claude.md
+Backend/test-db.js

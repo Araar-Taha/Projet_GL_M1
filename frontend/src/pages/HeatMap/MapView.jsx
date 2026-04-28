@@ -10,8 +10,15 @@ function AutoZoom({ filters, geoData }) {
   const map = useMap()
 
   useEffect(() => {
-    if (!filters.departement || !geoData) return
+    if (!geoData) return
 
+    // Cas 1 : Aucun département sélectionné -> On revient sur la vue d'ensemble (France)
+    if (!filters.departement) {
+      map.setView([46.6, 2.5], 6, { animate: true, duration: 1 })
+      return
+    }
+
+    // Cas 2 : Un département est sélectionné -> On zoom dessus
     // Normalisation du code (ex: "8" -> "08")
     const targetCode = filters.departement.toString().padStart(2, '0')
     

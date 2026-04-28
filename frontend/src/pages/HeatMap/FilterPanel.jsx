@@ -56,10 +56,14 @@ function FilterPanel({
 
   // Mise à jour du brouillon uniquement
   const updateFilter = (key, value) => {
+    const newFilters = { ...localFilters, [key]: value };
     if (key === 'departement') {
-      setLocalFilters({ ...localFilters, departement: value, commune: '' })
+      newFilters.commune = '';
+      setLocalFilters(newFilters);
+      // On déclenche le changement immédiatement pour le zoom et la mise à jour globale
+      onFiltersChange(newFilters);
     } else {
-      setLocalFilters({ ...localFilters, [key]: value })
+      setLocalFilters(newFilters);
     }
   }
 

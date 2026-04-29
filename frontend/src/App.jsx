@@ -17,10 +17,7 @@ function App() {
             <Route path="/" element={<HeatMapPage />} />
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/ajouter" element={<AddTransactionPage />} />
-            {/* Routes des autres membres */}
-            {/* <Route path="/classement" element={<ClassementPage />} /> */}
             <Route path="/classement" element={<ClassementPage />} />
-            {/* <Route path="/admin" element={<AdminPage />} /> */}
           </Routes>
         </main>
       </AuthProvider>

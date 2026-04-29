@@ -19,7 +19,7 @@ export async function getPrixEvolution(codeTerritoire, typeMutation) {
 
 
 export async function getStatsByDept(filters = {}) {
-  const response = await api.get('/transactions/stats-by-dept', { params: filters })
+  const response = await api.get('/mutations/stats-by-dept', { params: filters })
   return response.data
 }
 

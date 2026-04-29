@@ -1,6 +1,6 @@
 import api from './api'
 
-const TOKEN_KEY = 'dvf_auth_token'
+const TOKEN_KEY = 'dvf_token'
 
 export function getStoredToken() {
     return localStorage.getItem(TOKEN_KEY)

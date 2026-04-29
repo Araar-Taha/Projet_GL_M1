@@ -1,15 +1,15 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import api from '../../services/api'
+import { useAuth } from '../../context/AuthContext'
 import './AuthPage.css'
 
 function AuthPage() {
   const navigate = useNavigate()
-  const [view, setView] = useState('login') // 'login', 'signup', 'profile'
+  const { user, login, register, logout } = useAuth()
+  const [tab, setTab] = useState('login') // 'login' ou 'signup', utilisé seulement si pas connecté
   const [isAuthenticating, setIsAuthenticating] = useState(false)
   const [error, setError] = useState('')
-  const [user, setUser] = useState(null)
-  
+
   const [formData, setFormData] = useState({
     nom: '',
     prenom: '',
@@ -17,32 +17,13 @@ function AuthPage() {
     password: ''
   })
 
-  // Vérifier si déjà connecté au montage
-  useEffect(() => {
-    const savedUser = localStorage.getItem('dvf_user')
-    if (savedUser) {
-      setUser(JSON.parse(savedUser))
-      setView('profile')
-    }
-  }, [])
-
   const handleLogin = async (e) => {
     e.preventDefault()
     setError('')
     setIsAuthenticating(true)
     try {
-      const resp = await api.post('/auth/login', {
-        email: formData.email,
-        mot_de_pass: formData.password
-      })
-      
-      localStorage.setItem('dvf_token', resp.data.token)
-      localStorage.setItem('dvf_user', JSON.stringify(resp.data.user))
-      setUser(resp.data.user)
-      
-      setTimeout(() => {
-        navigate('/')
-      }, 1000)
+      await login({ email: formData.email, mot_de_pass: formData.password })
+      setTimeout(() => navigate('/'), 1000)
     } catch (err) {
       setError(err.response?.data?.error || 'Erreur lors de la connexion')
       setIsAuthenticating(false)
@@ -54,20 +35,13 @@ function AuthPage() {
     setError('')
     setIsAuthenticating(true)
     try {
-      const resp = await api.post('/auth/register', {
+      await register({
         nom: formData.nom,
         prenom: formData.prenom,
         email: formData.email,
         mot_de_pass: formData.password
       })
-      
-      localStorage.setItem('dvf_token', resp.data.token)
-      localStorage.setItem('dvf_user', JSON.stringify(resp.data.user))
-      setUser(resp.data.user)
-      
-      setTimeout(() => {
-        navigate('/')
-      }, 1000)
+      setTimeout(() => navigate('/'), 1000)
     } catch (err) {
       setError(err.response?.data?.error || "Erreur lors de l'inscription")
       setIsAuthenticating(false)
@@ -75,10 +49,8 @@ function AuthPage() {
   }
 
   const handleLogout = () => {
-    localStorage.removeItem('dvf_token')
-    localStorage.removeItem('dvf_user')
-    setUser(null)
-    setView('login')
+    logout()
+    setTab('login')
   }
 
   const BuildingsSVG = () => (
@@ -119,7 +91,7 @@ function AuthPage() {
               <h3>Action en cours...</h3>
               <p>Préparation de votre espace DVF Explorer</p>
             </div>
-          ) : view === 'profile' && user ? (
+          ) : user ? (
             <div className="profile-view">
               <div className="profile-avatar">
                 {user.prenom?.charAt(0) || user.email.charAt(0)}
@@ -136,15 +108,15 @@ function AuthPage() {
           ) : (
             <div className="auth-form-container">
               <div className="auth-tabs">
-                <button className={view === 'login' ? 'active' : ''} onClick={() => setView('login')}>Connexion</button>
-                <button className={view === 'signup' ? 'active' : ''} onClick={() => setView('signup')}>Inscription</button>
+                <button className={tab === 'login' ? 'active' : ''} onClick={() => setTab('login')}>Connexion</button>
+                <button className={tab === 'signup' ? 'active' : ''} onClick={() => setTab('signup')}>Inscription</button>
               </div>
-              <form className="auth-form" onSubmit={view === 'login' ? handleLogin : handleSignup}>
-                <h3>{view === 'login' ? 'Bon retour !' : 'Créer un compte'}</h3>
-                
+              <form className="auth-form" onSubmit={tab === 'login' ? handleLogin : handleSignup}>
+                <h3>{tab === 'login' ? 'Bon retour !' : 'Créer un compte'}</h3>
+
                 {error && <div className="auth-error">{error}</div>}
 
-                {view === 'signup' && (
+                {tab === 'signup' && (
                   <div className="filter-row">
                     <div className="form-group">
                       <label>Prénom</label>
@@ -156,19 +128,19 @@ function AuthPage() {
                     </div>
                   </div>
                 )}
-                
+
                 <div className="form-group">
                   <label>Email</label>
                   <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} placeholder="votre@email.com" required />
                 </div>
-                
+
                 <div className="form-group">
                   <label>Mot de passe</label>
                   <input type="password" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} placeholder="••••••••" required />
                 </div>
 
                 <button type="submit" className="btn-primary">
-                  {view === 'login' ? 'Se connecter' : "S'inscrire"}
+                  {tab === 'login' ? 'Se connecter' : "S'inscrire"}
                 </button>
               </form>
             </div>

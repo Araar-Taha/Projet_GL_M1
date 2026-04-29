@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import { useEffect, useState } from 'react';
+import api from '../services/api';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   BarChart, Bar, Cell, PieChart, Pie, Legend
@@ -13,20 +13,18 @@ const DashboardGraphes = ({ filters }) => {
   useEffect(() => {
     const fetchStats = async () => {
       if (!filters?.departement) return;
-      
+
       setLoading(true);
       try {
-        const query = new URLSearchParams({
-          departement: filters.departement,
-          commune: filters.commune || '',
-          typeMutation: filters.typeMutation || '', 
-          anneeDebut: filters.anneeDebut || 2020,
-          anneeFin: filters.anneeFin || 2024
-        }).toString();
-        
-        // On utilise l'URL relative car Axios est configuré dans api.js 
-        // ou on met 5001 si on utilise axios en direct
-        const response = await axios.get(`http://localhost:5001/api/graphs/all?${query}`);
+        const response = await api.get('/graphs/all', {
+          params: {
+            departement: filters.departement,
+            commune: filters.commune || '',
+            typeMutation: filters.typeMutation || '',
+            anneeDebut: filters.anneeDebut || 2020,
+            anneeFin: filters.anneeFin || 2024
+          }
+        });
         setData(response.data);
       } catch (error) {
         console.error("Erreur API Dashboard:", error);

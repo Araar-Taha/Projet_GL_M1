@@ -3,9 +3,9 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import prisma from '../lib/prisma.js';
 import { authenticateToken } from '../middleware/auth.middleware.js';
+import { JWT_SECRET } from '../lib/constants.js';
 
 const router = Router();
-const JWT_SECRET = process.env.JWT_SECRET || 'dvf_secret_key_change_me';
 const JWT_EXPIRES_IN = '7d';
 
 // ──────────────────────────────────────────────

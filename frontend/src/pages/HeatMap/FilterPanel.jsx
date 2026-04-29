@@ -25,14 +25,6 @@ function FilterPanel({
   const [departements, setDepartements] = useState([])
   const [communes, setCommunes] = useState([])
 
-  // État local pour stocker les modifs avant validation (Brouillon)
-  const [localFilters, setLocalFilters] = useState(filters);
-
-  // Sync avec le parent si besoin (ex: reset ou init)
-  useEffect(() => {
-    setLocalFilters(filters);
-  }, [filters]);
-
   // Chargement initial des départements
   useEffect(() => {
     getDepartements()
@@ -43,33 +35,25 @@ function FilterPanel({
       });
   }, []);
 
-  // Chargement des communes dès que le département du BROUILLON change
+  // Chargement des communes quand le département change
   useEffect(() => {
-    if (localFilters.departement) {
-      getCommunes(localFilters.departement)
+    if (filters.departement) {
+      getCommunes(filters.departement)
         .then(setCommunes)
         .catch(() => setCommunes([]))
     } else {
       setCommunes([])
     }
-  }, [localFilters.departement])
+  }, [filters.departement])
 
-  // Mise à jour du brouillon et notification immédiate au parent
+  // Mise à jour immédiate des filtres côté parent (réactivité totale)
   const updateFilter = (key, value) => {
-    const newFilters = { ...localFilters, [key]: value };
+    const newFilters = { ...filters, [key]: value };
     if (key === 'departement') {
       newFilters.commune = '';
     }
-    setLocalFilters(newFilters);
-    // On déclenche le changement immédiatement pour une réactivité totale
     onFiltersChange(newFilters);
   }
-
-  // Validation finale : on envoie le brouillon au parent pour l'API
-  const handleExplorerClick = () => {
-    onModeChange('explorer');
-    onFiltersChange(localFilters); 
-  };
 
   return (
     <div className="filter-panel">
@@ -78,7 +62,7 @@ function FilterPanel({
       <div className="filter-group">
         <label>Département</label>
         <select
-          value={localFilters.departement || ''}
+          value={filters.departement || ''}
           onChange={(e) => updateFilter('departement', e.target.value)}
         >
           <option value="">Tous les départements</option>
@@ -91,9 +75,9 @@ function FilterPanel({
       <div className="filter-group">
         <label>Commune</label>
         <select
-          value={localFilters.commune || ''}
+          value={filters.commune || ''}
           onChange={(e) => updateFilter('commune', e.target.value)}
-          disabled={!localFilters.departement}
+          disabled={!filters.departement}
         >
           <option value="">Toutes les communes</option>
           {communes.map((com) => (
@@ -105,7 +89,7 @@ function FilterPanel({
       <div className="filter-group">
         <label>Type de mutation</label>
         <select
-          value={localFilters.typeMutation || ''}
+          value={filters.typeMutation || ''}
           onChange={(e) => updateFilter('typeMutation', e.target.value)}
         >
           {TYPES_MUTATION.map((type) => (
@@ -121,7 +105,7 @@ function FilterPanel({
             type="number"
             min="2014"
             max="2024"
-            value={localFilters.anneeDebut || ''}
+            value={filters.anneeDebut || ''}
             onChange={(e) => updateFilter('anneeDebut', Number(e.target.value))}
             placeholder="Début"
           />
@@ -130,7 +114,7 @@ function FilterPanel({
             type="number"
             min="2014"
             max="2024"
-            value={localFilters.anneeFin || ''}
+            value={filters.anneeFin || ''}
             onChange={(e) => updateFilter('anneeFin', Number(e.target.value))}
             placeholder="Fin"
           />
@@ -141,10 +125,9 @@ function FilterPanel({
 
       <h3 className="filter-title">Mode</h3>
       <div className="mode-toggle">
-        {/* Le clic ici valide tous les filtres locaux */}
-        <button 
-          className={mode === 'explorer' ? 'active' : ''} 
-          onClick={handleExplorerClick}
+        <button
+          className={mode === 'explorer' ? 'active' : ''}
+          onClick={() => onModeChange('explorer')}
         >
           Explorer
         </button>

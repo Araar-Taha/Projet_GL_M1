@@ -1,6 +1,5 @@
 import jwt from 'jsonwebtoken';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'dvf_secret_key_change_me';
+import { JWT_SECRET } from '../lib/constants.js';
 
 export function authenticateToken(req, res, next) {
     const authHeader = req.headers['authorization'];

@@ -8,6 +8,7 @@ import graphRoutes from './src/lib/routes/graphRoutes.js';
 
 import territoireRoutes from './src/routes/territoire.routes.js';
 import populationRoutes from './src/routes/population.routes.js';
+import classementRoutes from './src/routes/classement.routes.js';
 
 const app = express();
 
@@ -23,12 +24,10 @@ app.use(express.json());
 // Routes
 app.use('/api/graphs', graphRoutes);
 app.use('/api/auth', authRoutes);
-app.use('/api/transactions', transactionRoutes);
 app.use('/api/territoires', territoireRoutes);
 app.use('/api/population', populationRoutes);
-app.use('/api/mutations', transactionRoutes); 
-
-
+app.use('/api/mutations', transactionRoutes);
+app.use('/api/classement', classementRoutes);
 
 app.get('/', (req, res) => {
     res.send('DVF en live - Prisma connecté');

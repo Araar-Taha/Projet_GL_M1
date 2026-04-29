@@ -1,11 +1,5 @@
 import prisma from '../prisma.js';
 
-// Nettoyage des chaînes (enlève accents et majuscules)
-const cleanString = (str) => {
-  if (!str) return "";
-  return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
-};
-
 export const getStats = async (filters) => {
   const { departement, commune, typeMutation, anneeDebut, anneeFin } = filters;
   const startYear = parseInt(anneeDebut) || 2020;
@@ -37,11 +31,8 @@ export const getStats = async (filters) => {
       orderBy: { annee: 'asc' }
     });
 
-    // On garde filteredTransactions égal à allTransactions car le type est déjà filtré par Prisma
-    const filteredTransactions = allTransactions;
-
     // Calcul de l'évolution (prix moyen et volume de ventes)
-    const evolutionMap = filteredTransactions.reduce((acc, curr) => {
+    const evolutionMap = allTransactions.reduce((acc, curr) => {
       const a = curr.annee;
       const p = curr.valeur_fonciere ? parseFloat(curr.valeur_fonciere.toString()) : 0;
       const nbMutations = Number(curr.nombre_mutation || 0);

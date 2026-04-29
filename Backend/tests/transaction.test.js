@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert';
 
-const BASE_URL = 'http://localhost:5000/api';
+const BASE_URL = process.env.TEST_BASE_URL || 'http://localhost:5001/api';
 let authToken;
 
 test('Data Entry (Transactions)', async (t) => {
@@ -37,7 +37,7 @@ test('Data Entry (Transactions)', async (t) => {
     });
 
     await t.test('should reject transaction without token', async () => {
-        const res = await fetch(`${BASE_URL}/transactions`, {
+        const res = await fetch(`${BASE_URL}/mutations`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -52,7 +52,7 @@ test('Data Entry (Transactions)', async (t) => {
     });
 
     await t.test('should create a new transaction with valid token', async () => {
-        const res = await fetch(`${BASE_URL}/transactions`, {
+        const res = await fetch(`${BASE_URL}/mutations`, {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
@@ -78,12 +78,6 @@ test('Data Entry (Transactions)', async (t) => {
         assert.strictEqual(data.transaction.type_transaction, 'Vente test automatisé');
         // Because of Decimal format in postgres, sometimes value is returned as string
         assert.strictEqual(Number(data.transaction.valeur_fonciere), 999999.99);
-    });
-    
-    await t.test('should fetch transactions to verify DB insertion', async () => {
-        // We can just hit the public get route to see if it's there
-        const res = await fetch(`${BASE_URL}/transactions`);
-        // Wait, does /api/transactions have a GET route?
     });
 
 });

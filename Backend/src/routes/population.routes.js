@@ -1,5 +1,6 @@
 import express from 'express';
 import prisma from '../lib/prisma.js';
+import { whereCodePostal } from '../lib/codePostal.js';
 
 const router = express.Router();
 
@@ -7,10 +8,7 @@ const router = express.Router();
 router.get('/evolution/:code', async (req, res) => {
     const { code } = req.params;
     try {
-        // Filtre : si code.length <= 3 on part du principe que c'est un département, sinon une commune/code postal
-        const where = code.length <= 3 
-            ? { code_postal: { startsWith: code } }
-            : { code_postal: code };
+        const where = whereCodePostal(code);
 
         const data = await prisma.population.findMany({
             where,
@@ -43,9 +41,7 @@ router.get('/evolution/:code', async (req, res) => {
 router.get('/ages/:code', async (req, res) => {
     const { code } = req.params;
     try {
-        const where = code.length <= 3 
-            ? { code_postal: { startsWith: code } }
-            : { code_postal: code };
+        const where = whereCodePostal(code);
 
         // On prend les données les plus récentes
         const records = await prisma.population.findMany({

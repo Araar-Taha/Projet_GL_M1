@@ -1,19 +1,20 @@
 import express from 'express';
 import prisma from '../lib/prisma.js';
 import { authenticateToken } from '../middleware/auth.middleware.js';
+import { whereCodePostal } from '../lib/codePostal.js';
+import { ANNEE_DEFAUT_DEBUT, ANNEE_DEFAUT_FIN } from '../lib/constants.js';
 
 const router = express.Router();
 
 router.get('/stats-by-dept', async (req, res) => {
     const { typeMutation, anneeDebut, anneeFin } = req.query;
-    console.log('API Request: GET /stats-by-dept', { typeMutation, anneeDebut, anneeFin });
-    
+
     try {
         const where = {};
         if (typeMutation) where.type_transaction = { equals: typeMutation, mode: 'insensitive' };
         where.annee = {
-            gte: parseInt(anneeDebut) || 2014,
-            lte: parseInt(anneeFin) || 2024
+            gte: parseInt(anneeDebut) || ANNEE_DEFAUT_DEBUT,
+            lte: parseInt(anneeFin) || ANNEE_DEFAUT_FIN
         };
 
         const stats = await prisma.transaction.groupBy({
@@ -21,7 +22,7 @@ router.get('/stats-by-dept', async (req, res) => {
             where,
             _count: { identifiant: true }
         });
-        
+
         // Agréger par département (2 premiers chiffres du code postal)
         const statsObject = stats.reduce((acc, curr) => {
             const deptCode = curr.code_postal.substring(0, 2);
@@ -29,7 +30,6 @@ router.get('/stats-by-dept', async (req, res) => {
             return acc;
         }, {});
 
-        console.log('Stats loaded for', Object.keys(statsObject).length, 'departments');
         res.json(statsObject);
     } catch (error) {
         console.error('Stats by dept error:', error);
@@ -37,14 +37,14 @@ router.get('/stats-by-dept', async (req, res) => {
     }
 });
 
-// GET /api/mutations (ou /api/transactions)
+// GET /api/mutations
 // Supporte les filtres : departement, commune, anneeDebut, anneeFin, typeMutation
 router.get('/', async (req, res) => {
     try {
         const { departement, commune, typeMutation, anneeDebut, anneeFin } = req.query;
-        
+
         const where = {};
-        
+
         if (commune) {
             where.code_postal = commune;
         } else if (departement) {
@@ -57,8 +57,8 @@ router.get('/', async (req, res) => {
 
         if (anneeDebut || anneeFin) {
             where.annee = {
-                gte: parseInt(anneeDebut) || 2014,
-                lte: parseInt(anneeFin) || 2024
+                gte: parseInt(anneeDebut) || ANNEE_DEFAUT_DEBUT,
+                lte: parseInt(anneeFin) || ANNEE_DEFAUT_FIN
             };
         }
 
@@ -67,7 +67,7 @@ router.get('/', async (req, res) => {
             take: 200,
             orderBy: { annee: 'desc' }
         });
-        
+
         res.json(transactions);
     } catch (error) {
         console.error('Fetch transactions error:', error);
@@ -79,19 +79,17 @@ router.get('/', async (req, res) => {
 router.get('/stats/:code', async (req, res) => {
     const { code } = req.params;
     const { typeMutation, anneeDebut, anneeFin } = req.query;
-    
+
     try {
-        const where = code.length <= 3 
-            ? { code_postal: { startsWith: code } }
-            : { code_postal: code };
+        const where = whereCodePostal(code);
 
         if (typeMutation) {
             where.type_transaction = { equals: typeMutation, mode: 'insensitive' };
         }
-        
+
         where.annee = {
-            gte: parseInt(anneeDebut) || 2014,
-            lte: parseInt(anneeFin) || 2024
+            gte: parseInt(anneeDebut) || ANNEE_DEFAUT_DEBUT,
+            lte: parseInt(anneeFin) || ANNEE_DEFAUT_FIN
         };
 
         const stats = await prisma.transaction.aggregate({
@@ -117,9 +115,7 @@ router.get('/prix-evolution/:code', async (req, res) => {
     const { code } = req.params;
     const { typeMutation } = req.query;
     try {
-        const where = code.length <= 3 
-            ? { code_postal: { startsWith: code } }
-            : { code_postal: code };
+        const where = whereCodePostal(code);
 
         if (typeMutation) {
             where.type_transaction = { equals: typeMutation, mode: 'insensitive' };
@@ -144,7 +140,7 @@ router.get('/prix-evolution/:code', async (req, res) => {
     }
 });
 
-// POST /api/transactions
+// POST /api/mutations
 // @access Private
 router.post('/', authenticateToken, async (req, res) => {
     try {
@@ -169,10 +165,5 @@ router.post('/', authenticateToken, async (req, res) => {
         res.status(500).json({ error: 'Erreur lors de l\'ajout de la donnée foncière' });
     }
 });
-
-
-
-// GET /api/mutations (ou /api/transactions)
-
 
 export default router;

@@ -1,7 +1,7 @@
 import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 
-const BASE_URL = 'http://localhost:5000/api/auth';
+const BASE_URL = (process.env.TEST_BASE_URL || 'http://localhost:5001/api') + '/auth';
 
 // Unique email for this test run
 const TEST_EMAIL = 'test@dvf-test.com';

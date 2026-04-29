@@ -1,4 +1,4 @@
-import prisma from './src/lib/prisma.js'
+import prisma from '../src/lib/prisma.js'
 
 async function main() {
   const types = await prisma.transaction.groupBy({

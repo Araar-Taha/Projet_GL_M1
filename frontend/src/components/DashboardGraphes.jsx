@@ -19,9 +19,9 @@ const DashboardGraphes = ({ filters }) => {
         const query = new URLSearchParams({
           departement: filters.departement,
           commune: filters.commune || '',
-          type: filters.typeMutation || '', 
-          debut: filters.anneeDebut || 2020,
-          fin: filters.anneeFin || 2024
+          typeMutation: filters.typeMutation || '', 
+          anneeDebut: filters.anneeDebut || 2020,
+          anneeFin: filters.anneeFin || 2024
         }).toString();
         
         // On utilise l'URL relative car Axios est configuré dans api.js 

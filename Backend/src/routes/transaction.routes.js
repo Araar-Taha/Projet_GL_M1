@@ -5,16 +5,27 @@ import { authenticateToken } from '../middleware/auth.middleware.js';
 const router = express.Router();
 
 router.get('/stats-by-dept', async (req, res) => {
-    console.log('API Request: GET /stats-by-dept');
+    const { typeMutation, anneeDebut, anneeFin } = req.query;
+    console.log('API Request: GET /stats-by-dept', { typeMutation, anneeDebut, anneeFin });
+    
     try {
-        const stats = await prisma.$queryRaw`
-            SELECT LEFT(code_postal, 2) as code, COUNT(*)::int as count
-            FROM transaction
-            GROUP BY LEFT(code_postal, 2)
-        `;
+        const where = {};
+        if (typeMutation) where.type_transaction = { equals: typeMutation, mode: 'insensitive' };
+        where.annee = {
+            gte: parseInt(anneeDebut) || 2014,
+            lte: parseInt(anneeFin) || 2024
+        };
+
+        const stats = await prisma.transaction.groupBy({
+            by: ['code_postal'],
+            where,
+            _count: { identifiant: true }
+        });
         
+        // Agréger par département (2 premiers chiffres du code postal)
         const statsObject = stats.reduce((acc, curr) => {
-            acc[curr.code] = curr.count;
+            const deptCode = curr.code_postal.substring(0, 2);
+            acc[deptCode] = (acc[deptCode] || 0) + curr._count.identifiant;
             return acc;
         }, {});
 
@@ -41,7 +52,7 @@ router.get('/', async (req, res) => {
         }
 
         if (typeMutation) {
-            where.type_transaction = typeMutation;
+            where.type_transaction = { equals: typeMutation, mode: 'insensitive' };
         }
 
         if (anneeDebut || anneeFin) {
@@ -67,10 +78,21 @@ router.get('/', async (req, res) => {
 // GET /api/mutations/stats/:code
 router.get('/stats/:code', async (req, res) => {
     const { code } = req.params;
+    const { typeMutation, anneeDebut, anneeFin } = req.query;
+    
     try {
         const where = code.length <= 3 
             ? { code_postal: { startsWith: code } }
             : { code_postal: code };
+
+        if (typeMutation) {
+            where.type_transaction = { equals: typeMutation, mode: 'insensitive' };
+        }
+        
+        where.annee = {
+            gte: parseInt(anneeDebut) || 2014,
+            lte: parseInt(anneeFin) || 2024
+        };
 
         const stats = await prisma.transaction.aggregate({
             where,
@@ -100,7 +122,7 @@ router.get('/prix-evolution/:code', async (req, res) => {
             : { code_postal: code };
 
         if (typeMutation) {
-            where.type_transaction = typeMutation;
+            where.type_transaction = { equals: typeMutation, mode: 'insensitive' };
         }
 
         const data = await prisma.transaction.groupBy({

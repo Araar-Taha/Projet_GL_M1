@@ -1,35 +1,34 @@
 import { useState, useEffect } from 'react'
-import { getCommuneInfo } from '../../services/territories.service'
-import { getMutationsStats, getPrixEvolution } from '../../services/mutations.service'
-import { getPopulationEvolution, getAgeDistribution } from '../../services/population.service'
-import PriceEvolutionChart from './charts/PriceEvolutionChart'
-import PopulationChart from './charts/PopulationChart'
-import AgeDistributionChart from './charts/AgeDistributionChart'
+import { getMutationsStats } from '../../services/mutations.service'
 import './InfoPanel.css'
 
-function InfoPanel({ commune }) {
+function InfoPanel({ commune, filters }) {
   const [stats, setStats] = useState(null)
-  const [prixData, setPrixData] = useState([])
-  const [populationData, setPopulationData] = useState([])
-  const [ageData, setAgeData] = useState([])
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     if (!commune) return
 
     const code = commune.code
-
-    getCommuneInfo(code).then(setStats).catch(() => setStats(null))
-    getPrixEvolution(code).then(setPrixData).catch(() => setPrixData([]))
-    getPopulationEvolution(code).then(setPopulationData).catch(() => setPopulationData([]))
-    getAgeDistribution(code).then(setAgeData).catch(() => setAgeData([]))
-  }, [commune])
+    setLoading(true)
+    
+    // On récupère les stats globales pour le territoire avec les filtres (typeMutation, etc.)
+    getMutationsStats(code, filters)
+      .then(data => {
+        setStats(data)
+        setLoading(false)
+      })
+      .catch((err) => {
+        console.error("Error fetching info stats:", err)
+        setStats(null)
+        setLoading(false)
+      })
+  }, [commune, filters])
 
   if (!commune) {
     return (
-      <div className="info-panel">
-        <div className="info-empty">
-          <p>Cliquez sur un département pour afficher ses informations</p>
-        </div>
+      <div className="info-panel empty">
+        <p>Sélectionnez une zone pour voir les détails</p>
       </div>
     )
   }
@@ -37,31 +36,42 @@ function InfoPanel({ commune }) {
   return (
     <div className="info-panel">
       <div className="info-header">
-        <h2 className="info-title">📍 Détails de la zone</h2>
+        <span className="zone-badge">Département {commune.code}</span>
+        <h2 className="zone-name">{commune.nom}</h2>
       </div>
-      <h3 className="commune-name">{commune.nom}</h3>
-      <span className="info-code">Code : {commune.code}</span>
 
-      
-      <div className="info-charts">
-        {prixData.length > 0 && (
-          <div className="chart-section">
-            <h4>Évolution valeur m²</h4>
-            <PriceEvolutionChart data={prixData} />
+      <div className="stats-kpi-container">
+        <div className="kpi-card">
+          <span className="kpi-label">Prix Moyen m²</span>
+          <div className="kpi-value-row">
+            <span className="kpi-value">
+              {loading ? '...' : (stats?.prixMoyen ? `${stats.prixMoyen.toLocaleString()} €` : 'N/A')}
+            </span>
+            <span className="kpi-trend">Lissé</span>
           </div>
-        )}
-        {populationData.length > 0 && (
-          <div className="chart-section">
-            <h4>Évolution population</h4>
-            <PopulationChart data={populationData} />
+        </div>
+
+        <div className="kpi-card">
+          <span className="kpi-label">Volume de ventes</span>
+          <div className="kpi-value-row">
+            <span className="kpi-value">
+              {loading ? '...' : (stats?.totalVentes ? stats.totalVentes.toLocaleString() : 'N/A')}
+            </span>
           </div>
-        )}
-        {ageData.length > 0 && (
-          <div className="chart-section">
-            <h4>Tranches d'âge</h4>
-            <AgeDistributionChart data={ageData} />
+        </div>
+
+        <div className="kpi-card">
+          <span className="kpi-label">Nb Transactions</span>
+          <div className="kpi-value-row">
+            <span className="kpi-value">
+              {loading ? '...' : (stats?.nombreTransactions ? stats.nombreTransactions.toLocaleString() : 'N/A')}
+            </span>
           </div>
-        )}
+        </div>
+      </div>
+
+      <div className="info-footer">
+        <p>Données DVF consolidées (2014-2024)</p>
       </div>
     </div>
   )

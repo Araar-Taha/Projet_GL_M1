@@ -5,8 +5,8 @@ export async function getMutations(filters) {
   return response.data
 }
 
-export async function getMutationsStats(codeTerritoire) {
-  const response = await api.get(`/mutations/stats/${codeTerritoire}`)
+export async function getMutationsStats(codeTerritoire, filters = {}) {
+  const response = await api.get(`/mutations/stats/${codeTerritoire}`, { params: filters })
   return response.data
 }
 
@@ -18,8 +18,8 @@ export async function getPrixEvolution(codeTerritoire, typeMutation) {
 }
 
 
-export async function getStatsByDept() {
-  const response = await api.get('/transactions/stats-by-dept')
+export async function getStatsByDept(filters = {}) {
+  const response = await api.get('/transactions/stats-by-dept', { params: filters })
   return response.data
 }
 

@@ -7,7 +7,7 @@ const TYPES_MUTATION = [
   { value: 'Vente', label: 'Vente' },
   { value: "Vente en l'état futur d'achèvement", label: "Vente en l'état futur d'achèvement" },
   { value: 'Vente terrain à bâtir', label: 'Vente terrain à bâtir' },
-  { value: 'Échange', label: 'Échange' },
+  { value: 'Echange', label: 'Échange' },
   { value: 'Expropriation', label: 'Expropriation' },
   { value: 'Adjudication', label: 'Adjudication' },
 ]
@@ -54,17 +54,15 @@ function FilterPanel({
     }
   }, [localFilters.departement])
 
-  // Mise à jour du brouillon uniquement
+  // Mise à jour du brouillon et notification immédiate au parent
   const updateFilter = (key, value) => {
     const newFilters = { ...localFilters, [key]: value };
     if (key === 'departement') {
       newFilters.commune = '';
-      setLocalFilters(newFilters);
-      // On déclenche le changement immédiatement pour le zoom et la mise à jour globale
-      onFiltersChange(newFilters);
-    } else {
-      setLocalFilters(newFilters);
     }
+    setLocalFilters(newFilters);
+    // On déclenche le changement immédiatement pour une réactivité totale
+    onFiltersChange(newFilters);
   }
 
   // Validation finale : on envoie le brouillon au parent pour l'API

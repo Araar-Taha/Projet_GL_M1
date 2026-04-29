@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import FilterPanel from './FilterPanel'
 import MapView from './MapView'
 import InfoPanel from './InfoPanel'
 import CompareView from './CompareView'
 import DashboardGraphes from '../../components/DashboardGraphes'
+import { getDepartements } from '../../services/territories.service'
 import './HeatMapPage.css'
 
 function HeatMapPage() {
@@ -18,6 +19,27 @@ function HeatMapPage() {
   })
   const [territoireA, setTerritoireA] = useState(null)
   const [territoireB, setTerritoireB] = useState(null)
+  const [departements, setDepartements] = useState([])
+
+  // 1. Charger les départements pour avoir accès aux noms
+  useEffect(() => {
+    getDepartements().then(setDepartements).catch(() => setDepartements([]))
+  }, [])
+
+  // 2. Synchroniser le panneau de détails avec le filtre département
+  useEffect(() => {
+    if (filters.departement) {
+      const dep = departements.find(d => d.code === filters.departement);
+      if (dep && (!selectedCommune || selectedCommune.code !== dep.code)) {
+        setSelectedCommune({
+          code: dep.code,
+          nom: dep.nom
+        });
+      }
+    } else {
+      setSelectedCommune(null);
+    }
+  }, [filters.departement, departements])
 
   return (
     <div className="page-container">
@@ -58,7 +80,7 @@ function HeatMapPage() {
 
         {mode === 'explorer' && (
           <div className="info-sidebar">
-            <InfoPanel commune={selectedCommune} />
+            <InfoPanel commune={selectedCommune} filters={filters} />
           </div>
         )}
       </div>

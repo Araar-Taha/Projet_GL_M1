@@ -73,14 +73,16 @@ function MapView({ filters, onCommuneSelect }) {
 
   // 2. Charger les vraies stats d'intensité depuis le Backend
   useEffect(() => {
-    getStatsByDept().then(stats => {
+    getStatsByDept(filters).then(stats => {
       setIntensityStats(stats)
       const counts = Object.values(stats)
       if (counts.length > 0) {
         setMaxCount(Math.max(...counts))
+      } else {
+        setMaxCount(1) // Reset if no data
       }
     }).catch(err => console.error("Map intensity error:", err))
-  }, [])
+  }, [filters])
 
   const onEachFeature = (feature, layer) => {
     const { nom, code } = feature.properties

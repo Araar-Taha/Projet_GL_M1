@@ -7,34 +7,38 @@ const cleanString = (str) => {
 };
 
 export const getStats = async (filters) => {
-  const { departement, commune, type, debut, fin } = filters;
-  const anneeDebut = parseInt(debut) || 2020;
-  const anneeFin = parseInt(fin) || 2024;
+  const { departement, commune, typeMutation, anneeDebut, anneeFin } = filters;
+  const startYear = parseInt(anneeDebut) || 2020;
+  const endYear = parseInt(anneeFin) || 2024;
   
-  // Construction du filtre Prisma
-  const where = {};
+  // Construction du filtre de localisation (commun aux deux tables)
+  const locationWhere = {};
   if (commune) {
     const communeClean = commune.startsWith('0') ? commune.substring(1) : commune;
-    where.code_postal = { in: [commune, communeClean] };
+    locationWhere.code_postal = { in: [commune, communeClean] };
   } else if (departement) {
     const depClean = departement.startsWith('0') ? departement.substring(1) : departement;
-    where.OR = [
+    locationWhere.OR = [
       { code_postal: { startsWith: departement } },
       { code_postal: { startsWith: depClean } }
     ];
   }
 
+  // Filtre spécifique pour les transactions
+  const transactionWhere = { ...locationWhere, annee: { gte: startYear, lte: endYear } };
+  if (typeMutation) {
+    transactionWhere.type_transaction = { equals: typeMutation, mode: 'insensitive' };
+  }
+
   try {
-    // Récupération des transactions avec les filtres
+    // Récupération des transactions
     const allTransactions = await prisma.transaction.findMany({ 
-      where: { ...where, annee: { gte: anneeDebut, lte: anneeFin } },
+      where: transactionWhere,
       orderBy: { annee: 'asc' }
     });
 
-    const typeRecherche = cleanString(type);
-    const filteredTransactions = (typeRecherche && typeRecherche !== "tous" && typeRecherche !== "")
-      ? allTransactions.filter(t => cleanString(t.type_transaction) === typeRecherche)
-      : allTransactions;
+    // On garde filteredTransactions égal à allTransactions car le type est déjà filtré par Prisma
+    const filteredTransactions = allTransactions;
 
     // Calcul de l'évolution (prix moyen et volume de ventes)
     const evolutionMap = filteredTransactions.reduce((acc, curr) => {
@@ -75,7 +79,7 @@ export const getStats = async (filters) => {
     })).sort((a, b) => b.count - a.count);
 
     // Récupération des données démographiques
-    const popData = await prisma.population.findFirst({ where });
+    const popData = await prisma.population.findFirst({ where: locationWhere });
     let ages = [];
     if (popData) {
       const total = Number(popData.population_totale || 1);

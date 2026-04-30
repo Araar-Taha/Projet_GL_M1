@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { createTransaction } from '../../services/transaction.service'
+import { createTransaction } from '../../services/mutations.service'
 import '../Auth/AuthPage.css' // Reuse the nice forms styling
 
 export default function AddTransactionPage() {

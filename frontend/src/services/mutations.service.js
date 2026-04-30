@@ -23,3 +23,8 @@ export async function getStatsByDept(filters = {}) {
   return response.data
 }
 
+export async function createTransaction(transactionData) {
+  const response = await api.post('/mutations', transactionData)
+  return response.data
+}
+

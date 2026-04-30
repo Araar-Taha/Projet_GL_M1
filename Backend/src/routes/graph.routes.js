@@ -1,7 +1,10 @@
-import prisma from '../prisma.js';
+import express from 'express';
+import prisma from '../lib/prisma.js';
 
-export const getStats = async (filters) => {
-  const { departement, commune, typeMutation, anneeDebut, anneeFin } = filters;
+const router = express.Router();
+
+router.get('/all', async (req, res) => {
+  const { departement, commune, typeMutation, anneeDebut, anneeFin } = req.query;
   const startYear = parseInt(anneeDebut) || 2020;
   const endYear = parseInt(anneeFin) || 2024;
   
@@ -83,10 +86,12 @@ export const getStats = async (filters) => {
       ];
     }
 
-    return { evolution, distribution, ages };
+    res.json({ evolution, distribution, ages });
 
   } catch (error) {
-    console.error("ERREUR PRISMA:", error);
-    return { evolution: [], distribution: [], ages: [] };
+    console.error("Erreur Graph API:", error);
+    res.status(500).json({ error: "Erreur serveur" });
   }
-};
+});
+
+export default router;

@@ -4,7 +4,7 @@ import 'dotenv/config';
 import prisma from './src/lib/prisma.js';
 import authRoutes from './src/routes/auth.routes.js';
 import transactionRoutes from './src/routes/transaction.routes.js';
-import graphRoutes from './src/lib/routes/graphRoutes.js'; 
+import graphRoutes from './src/routes/graph.routes.js'; 
 
 import territoireRoutes from './src/routes/territoire.routes.js';
 import populationRoutes from './src/routes/population.routes.js';

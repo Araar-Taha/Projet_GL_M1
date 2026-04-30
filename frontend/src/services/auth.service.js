@@ -27,34 +27,22 @@ export async function login({ email, mot_de_pass }) {
 }
 
 export async function getProfile() {
-    const token = getStoredToken()
-    const response = await api.get('/auth/me', {
-        headers: { Authorization: `Bearer ${token}` }
-    })
+    const response = await api.get('/auth/me')
     return response.data
 }
 
 export async function updateProfile({ nom, prenom, email }) {
-    const token = getStoredToken()
-    const response = await api.put('/auth/me', { nom, prenom, email }, {
-        headers: { Authorization: `Bearer ${token}` }
-    })
+    const response = await api.put('/auth/me', { nom, prenom, email })
     return response.data
 }
 
 export async function changePassword({ ancien_mot_de_pass, nouveau_mot_de_pass }) {
-    const token = getStoredToken()
-    const response = await api.put('/auth/me/password', { ancien_mot_de_pass, nouveau_mot_de_pass }, {
-        headers: { Authorization: `Bearer ${token}` }
-    })
+    const response = await api.put('/auth/me/password', { ancien_mot_de_pass, nouveau_mot_de_pass })
     return response.data
 }
 
 export async function deleteAccount() {
-    const token = getStoredToken()
-    const response = await api.delete('/auth/me', {
-        headers: { Authorization: `Bearer ${token}` }
-    })
+    const response = await api.delete('/auth/me')
     removeStoredToken()
     return response.data
 }

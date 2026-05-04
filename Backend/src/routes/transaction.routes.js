@@ -26,7 +26,11 @@ router.get('/stats-by-dept', async (req, res) => {
 
         // Agréger par département (2 premiers chiffres du code postal)
         const statsObject = stats.reduce((acc, curr) => {
-            const deptCode = curr.code_postal.substring(0, 2);
+            if (!curr.code_postal) return acc;
+            // On nettoie le code postal de tout espace et on prend les 2 premiers caractères
+            const cleanCP = curr.code_postal.trim();
+            const deptCode = cleanCP.substring(0, 2);
+
             if (!acc[deptCode]) {
                 acc[deptCode] = { count: 0, totalVal: 0 };
             }
@@ -61,7 +65,7 @@ router.get('/stats-by-commune/:deptCode', async (req, res) => {
         const where = {
             code_postal: { startsWith: deptCode }
         };
-        
+
         if (typeMutation) where.type_transaction = { equals: typeMutation, mode: 'insensitive' };
         where.annee = {
             gte: parseInt(anneeDebut) || ANNEE_DEFAUT_DEBUT,

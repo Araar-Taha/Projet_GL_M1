@@ -53,7 +53,7 @@ const DashboardGraphes = ({ filters }) => {
 
   return (
     <div className="dashboard-graphes">
-      
+
       {/* 1. ÉVOLUTION DU PRIX AU M² */}
       <div className="graph-box big">
         <div className="graph-header">
@@ -67,24 +67,24 @@ const DashboardGraphes = ({ filters }) => {
               <AreaChart data={data.evolution}>
                 <defs>
                   <linearGradient id="colorPrix" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="annee" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} />
+                <XAxis dataKey="annee" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
                 <YAxis hide />
-                <Tooltip 
-                  contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)'}}
+                <Tooltip
+                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                   formatter={(value) => [`${value.toLocaleString()} €`, "Prix Moyen"]}
                 />
-                <Area 
-                  type="monotone" 
-                  dataKey="prixMoyen" 
-                  stroke="#8B5CF6" 
+                <Area
+                  type="monotone"
+                  dataKey="prixMoyen"
+                  stroke="#8B5CF6"
                   strokeWidth={3}
-                  fillOpacity={1} 
-                  fill="url(#colorPrix)" 
+                  fillOpacity={1}
+                  fill="url(#colorPrix)"
                   animationDuration={1500}
                 />
               </AreaChart>
@@ -105,9 +105,9 @@ const DashboardGraphes = ({ filters }) => {
             <div className="loader-mini">...</div>
           ) : data.ages.length > 0 ? (
             <ResponsiveContainer width="100%" height={180}>
-              <BarChart data={data.ages} layout="vertical" margin={{left: -20}}>
+              <BarChart data={data.ages} layout="vertical" margin={{ left: -20 }}>
                 <XAxis type="number" hide />
-                <YAxis dataKey="label" type="category" axisLine={false} tickLine={false} tick={{fill: '#1e293b', fontSize: 11}} />
+                <YAxis dataKey="label" type="category" axisLine={false} tickLine={false} tick={{ fill: '#1e293b', fontSize: 11 }} />
                 <Tooltip formatter={(value) => [`${value}%`, "Proportion"]} />
                 <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={20}>
                   {data.ages.map((entry, index) => (
@@ -147,7 +147,7 @@ const DashboardGraphes = ({ filters }) => {
                   ))}
                 </Pie>
                 <Tooltip />
-                <Legend iconType="circle" wrapperStyle={{fontSize: '11px'}} />
+                <Legend iconType="circle" wrapperStyle={{ fontSize: '11px' }} />
               </PieChart>
             </ResponsiveContainer>
           ) : (

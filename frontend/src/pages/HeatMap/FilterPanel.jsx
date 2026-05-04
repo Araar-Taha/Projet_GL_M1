@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { getDepartements, getCommunes } from '../../services/territories.service'
+import { getMutations } from '../../services/mutations.service'
 import './FilterPanel.css'
 
 const TYPES_MUTATION = [
@@ -71,6 +72,35 @@ function FilterPanel({
       newFilters.commune = '';
     }
     onFiltersChange(newFilters);
+  }
+
+  const handleExportCSV = async () => {
+    try {
+      const data = await getMutations(filters);
+      if (!data || data.length === 0) {
+        alert("Aucune donnée à exporter pour ces filtres.");
+        return;
+      }
+
+      const headers = Object.keys(data[0]).join(',');
+      const csvRows = data.map(row => 
+        Object.values(row).map(val => `"${val}"`).join(',')
+      );
+      const csvContent = [headers, ...csvRows].join('\n');
+      
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `export_dvf_${filters.departement || 'france'}_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error("Erreur lors de l'export CSV:", error);
+      alert("Une erreur est survenue lors de l'extraction des données.");
+    }
   }
 
   return (
@@ -155,8 +185,6 @@ function FilterPanel({
         </div>
       </div>
 
-      <div className="filter-divider" />
-
       <h3 className="filter-title">Mode</h3>
       <div className="mode-toggle">
         <button
@@ -172,6 +200,7 @@ function FilterPanel({
           Comparer
         </button>
       </div>
+      
 
       {mode === 'explorer' && (
         <>
@@ -234,6 +263,11 @@ function FilterPanel({
           </div>
         </div>
       )}
+      <div className="filter-divider" />
+      
+      <button className="export-button" onClick={handleExportCSV}>
+        Extraire les données (.csv)
+      </button>
     </div>
   )
 }

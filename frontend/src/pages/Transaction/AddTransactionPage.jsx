@@ -2,10 +2,15 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { createTransaction } from '../../services/mutations.service'
-import '../Auth/AuthPage.css' // Reuse the nice forms styling
+import './AddTransactionPage.css'
+
+// Importing the generated illustration
+// Note: In a real project, this would be a path like /assets/illustration.png
+// For this environment, we'll use the absolute path for demonstration
+const ILLUSTRATION_PATH = '/data_entry_illustration_1777905066637.png'
 
 export default function AddTransactionPage() {
-    const { isAuthenticated } = useAuth()
+    const { isAuthenticated, user } = useAuth()
     const navigate = useNavigate()
 
     const [formData, setFormData] = useState({
@@ -21,11 +26,12 @@ export default function AddTransactionPage() {
     // Ensure only logged in users can see this
     if (!isAuthenticated) {
         return (
-            <div className="auth-split-container" style={{ justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
-                <div className="auth-card" style={{ textAlign: 'center' }}>
-                    <h3>Accès refusé</h3>
-                    <p>Vous devez être connecté pour ajouter des données.</p>
-                    <button className="btn-primary" onClick={() => navigate('/auth')}>Se connecter</button>
+            <div className="add-transaction-container" style={{ justifyContent: 'center', alignItems: 'center' }}>
+                <div className="transaction-card" style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '3rem', marginBottom: '1.5rem' }}>🔒</div>
+                    <h3>Accès sécurisé</h3>
+                    <p>Veuillez vous connecter pour accéder à l'interface de saisie des données.</p>
+                    <button className="submit-btn" onClick={() => navigate('/auth')}>Se connecter</button>
                 </div>
             </div>
         )
@@ -43,7 +49,7 @@ export default function AddTransactionPage() {
 
         try {
             await createTransaction(formData)
-            setStatus({ type: 'success', message: 'Saisie réussie ! La donnée foncière a bien été ajoutée au système.' })
+            setStatus({ type: 'success', message: 'La transaction a été enregistrée avec succès.' })
             setFormData({
                 type_transaction: 'Vente',
                 valeur_fonciere: '',
@@ -54,7 +60,7 @@ export default function AddTransactionPage() {
         } catch (error) {
             setStatus({ 
                 type: 'error', 
-                message: error.response?.data?.error || 'Une erreur est survenue lors de l\'enregistrement.'
+                message: error.response?.data?.error || 'Erreur lors de l\'enregistrement. Veuillez vérifier les données.'
             })
         } finally {
             setSubmitting(false)
@@ -62,49 +68,83 @@ export default function AddTransactionPage() {
     }
 
     return (
-        <div className="auth-split-container" style={{ minHeight: 'calc(100vh - 80px)' }}>
-            <section className="auth-form-wrapper" style={{ flex: 1, margin: '0 auto', maxWidth: '600px' }}>
-                <div className="auth-card">
-                    <h2 style={{ marginBottom: '1rem', color: '#1e293b' }}>Ajouter une Transaction</h2>
-                    <p className="auth-subtitle" style={{ marginBottom: '2rem' }}>
-                        Enregistrez une nouvelle donnée foncière dans la base de données.
+        <div className="add-transaction-container">
+            {/* Left Section: Hero & Info */}
+            <aside className="add-transaction-hero">
+                <div className="hero-info">
+                    <span className="hero-badge">Contribution au Système</span>
+                    <h1>Enrichissez la <br /><span style={{ color: '#a5b4fc' }}>Base Foncière</span></h1>
+                    <p>
+                        Vos contributions permettent d'affiner les analyses du marché immobilier. 
+                        Remplissez le formulaire pour ajouter une nouvelle donnée transactionnelle.
                     </p>
+                    
+                    <div style={{ display: 'flex', gap: '2rem', marginBottom: '3rem' }}>
+                        <div>
+                            <div style={{ fontSize: '1.5rem', fontWeight: '800' }}>+12k</div>
+                            <div style={{ fontSize: '0.875rem', opacity: 0.7 }}>Transactions</div>
+                        </div>
+                        <div>
+                            <div style={{ fontSize: '1.5rem', fontWeight: '800' }}>99.9%</div>
+                            <div style={{ fontSize: '0.875rem', opacity: 0.7 }}>Précision</div>
+                        </div>
+                    </div>
+
+                    <img 
+                        src={ILLUSTRATION_PATH} 
+                        alt="Data Illustration" 
+                        className="hero-illustration"
+                        onError={(e) => { e.target.style.display = 'none' }} // Fallback if image not found
+                    />
+                </div>
+            </aside>
+
+            {/* Right Section: The Form */}
+            <main className="add-transaction-content">
+                <div className="transaction-card">
+                    <h2>Nouvelle Saisie</h2>
+                    <p>Détails de la mutation foncière</p>
 
                     {status.message && (
-                        <div className={status.type === 'error' ? 'auth-error' : 'auth-success'}>
-                            {status.message}
+                        <div className={`status-msg ${status.type}`}>
+                            {status.type === 'success' ? '✅' : '❌'} {status.message}
                         </div>
                     )}
 
-                    <form className="auth-form" onSubmit={handleSubmit}>
-                        <div className="form-group">
-                            <label>Type de transaction</label>
-                            <select name="type_transaction" value={formData.type_transaction} onChange={handleChange} style={{ width: '100%', padding: '0.85rem 1rem', borderRadius: '0.75rem', border: '1px solid #e2e8f0', backgroundColor: '#f8fafc', fontSize: '1rem' }}>
-                                <option value="Vente">Vente</option>
-                                <option value="Vente en l'état futur d'achèvement">Vente VEFA</option>
-                                <option value="Echange">Echange</option>
-                                <option value="Adjudication">Adjudication</option>
-                                <option value="Expropriation">Expropriation</option>
-                            </select>
-                        </div>
+                    <form onSubmit={handleSubmit}>
+                        <div className="form-grid">
+                            <div className="input-group full-width">
+                                <label>Type de transaction</label>
+                                <select 
+                                    name="type_transaction" 
+                                    value={formData.type_transaction} 
+                                    onChange={handleChange}
+                                    required
+                                >
+                                    <option value="Vente">Vente</option>
+                                    <option value="Vente en l'état futur d'achèvement">Vente VEFA</option>
+                                    <option value="Echange">Echange</option>
+                                    <option value="Adjudication">Adjudication</option>
+                                    <option value="Expropriation">Expropriation</option>
+                                </select>
+                            </div>
 
-                        <div className="form-group">
-                            <label>Valeur foncière (€)</label>
-                            <input 
-                                type="number" 
-                                name="valeur_fonciere" 
-                                value={formData.valeur_fonciere} 
-                                onChange={handleChange} 
-                                placeholder="ex: 250000" 
-                                required 
-                                min="0"
-                                step="0.01"
-                            />
-                        </div>
+                            <div className="input-group full-width">
+                                <label>Valeur foncière (€)</label>
+                                <input 
+                                    type="number" 
+                                    name="valeur_fonciere" 
+                                    value={formData.valeur_fonciere} 
+                                    onChange={handleChange} 
+                                    placeholder="Ex: 250000" 
+                                    required 
+                                    min="0"
+                                    step="0.01"
+                                />
+                            </div>
 
-                        <div className="profile-actions-row">
-                            <div className="form-group" style={{ flex: 1, marginTop: 0 }}>
-                                <label>Nombre de mutations</label>
+                            <div className="input-group">
+                                <label>Mutations</label>
                                 <input 
                                     type="number" 
                                     name="nombre_mutation" 
@@ -114,7 +154,8 @@ export default function AddTransactionPage() {
                                     min="1"
                                 />
                             </div>
-                            <div className="form-group" style={{ flex: 1, marginTop: 0 }}>
+
+                            <div className="input-group">
                                 <label>Année</label>
                                 <input 
                                     type="number" 
@@ -126,28 +167,29 @@ export default function AddTransactionPage() {
                                     max="2050"
                                 />
                             </div>
+
+                            <div className="input-group full-width">
+                                <label>Code Postal</label>
+                                <input 
+                                    type="text" 
+                                    name="code_postal" 
+                                    value={formData.code_postal} 
+                                    onChange={handleChange} 
+                                    placeholder="Ex: 75001" 
+                                    required 
+                                    pattern="[0-9]{5}"
+                                    title="5 chiffres requis"
+                                />
+                            </div>
                         </div>
 
-                        <div className="form-group">
-                            <label>Code Postal</label>
-                            <input 
-                                type="text" 
-                                name="code_postal" 
-                                value={formData.code_postal} 
-                                onChange={handleChange} 
-                                placeholder="ex: 75001" 
-                                required 
-                                pattern="[0-9]{5}"
-                                title="Le code postal doit contenir exactement 5 chiffres."
-                            />
-                        </div>
-
-                        <button type="submit" className="btn-primary" disabled={submitting}>
-                            {submitting ? 'Enregistrement...' : 'Enregistrer la transaction'}
+                        <button type="submit" className="submit-btn" disabled={submitting}>
+                            {submitting ? 'Traitement...' : 'Enregistrer la transaction'}
                         </button>
                     </form>
                 </div>
-            </section>
+            </main>
         </div>
     )
 }
+

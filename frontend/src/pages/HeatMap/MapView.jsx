@@ -252,9 +252,9 @@ function MapView({ filters, intensityType, onCommuneSelect }) {
       </MapContainer>
 
       <div className="map-legend">
-        <span className="legend-label">Forte intensité</span>
-        <div className="legend-gradient" />
         <span className="legend-label">Faible intensité</span>
+        <div className="legend-gradient" />
+        <span className="legend-label">Forte intensité</span>
       </div>
 
       {loading && <div className="map-loader">Chargement des données...</div>}

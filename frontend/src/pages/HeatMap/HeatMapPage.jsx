@@ -7,6 +7,7 @@ import DashboardGraphes from '../../components/DashboardGraphes'
 import { getMutationsStats } from '../../services/mutations.service'
 import { getPopulationStatsByCommune } from '../../services/population.service'
 import { getDepartements, getCommunes, getCommuneMapping } from '../../services/territories.service'
+import CustomGraph from '../../components/CustomGraph'
 import './HeatMapPage.css'
 
 function HeatMapPage() {
@@ -122,7 +123,10 @@ function HeatMapPage() {
       {/* BLOC DU BAS  */}
       <div className="bottom-section">
         {mode === 'explorer' && (
-          <DashboardGraphes filters={filters} />
+          <>
+            <DashboardGraphes filters={filters} />
+            <CustomGraph globalFilters={filters} />
+          </>
         )}
       </div>
 

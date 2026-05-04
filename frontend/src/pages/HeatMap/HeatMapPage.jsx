@@ -20,6 +20,7 @@ function HeatMapPage() {
   const [territoireA, setTerritoireA] = useState(null)
   const [territoireB, setTerritoireB] = useState(null)
   const [departements, setDepartements] = useState([])
+  const [intensityType, setIntensityType] = useState('count') // 'count' ou 'avgPrice'
 
   // 1. Charger les départements pour avoir accès aux noms
   useEffect(() => {
@@ -52,6 +53,8 @@ function HeatMapPage() {
             onFiltersChange={setFilters}
             mode={mode}
             onModeChange={setMode}
+            intensityType={intensityType}
+            onIntensityTypeChange={setIntensityType}
             territoireA={territoireA}
             territoireB={territoireB}
             onTerritoireAChange={setTerritoireA}
@@ -63,6 +66,7 @@ function HeatMapPage() {
           {mode === 'explorer' ? (
             <MapView
               filters={filters}
+              intensityType={intensityType}
               onCommuneSelect={(data) => {
                 setSelectedCommune(data);
                 // On synchronise le département sélectionné avec les filtres globaux

@@ -20,17 +20,35 @@ router.get('/stats-by-dept', async (req, res) => {
         const stats = await prisma.transaction.groupBy({
             by: ['code_postal'],
             where,
-            _count: { identifiant: true }
+            _count: { identifiant: true },
+            _sum: { valeur_fonciere: true }
         });
 
         // Agréger par département (2 premiers chiffres du code postal)
         const statsObject = stats.reduce((acc, curr) => {
-            const deptCode = curr.code_postal.substring(0, 2);
-            acc[deptCode] = (acc[deptCode] || 0) + curr._count.identifiant;
+            if (!curr.code_postal) return acc;
+            // On nettoie le code postal de tout espace et on prend les 2 premiers caractères
+            const cleanCP = curr.code_postal.trim();
+            const deptCode = cleanCP.substring(0, 2);
+            
+            if (!acc[deptCode]) {
+                acc[deptCode] = { count: 0, totalVal: 0 };
+            }
+            acc[deptCode].count += curr._count.identifiant;
+            acc[deptCode].totalVal += Number(curr._sum.valeur_fonciere || 0);
             return acc;
         }, {});
 
-        res.json(statsObject);
+        // Calculer la moyenne finale par département
+        const finalStats = {};
+        for (const dept in statsObject) {
+            finalStats[dept] = {
+                count: statsObject[dept].count,
+                avgPrice: statsObject[dept].count > 0 ? Math.round(statsObject[dept].totalVal / statsObject[dept].count) : 0
+            };
+        }
+
+        res.json(finalStats);
     } catch (error) {
         console.error('Stats by dept error:', error);
         res.status(500).json({ error: 'Erreur lors du calcul des stats par département' });

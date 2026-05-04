@@ -12,6 +12,15 @@ function Navbar() {
       </div>
       <ul className="navbar-links">
         <li>
+          <NavLink to="/auth" className={`nav-account-link ${isAuthenticated && user ? 'nav-avatar-link' : ''}`}>
+            {isAuthenticated && user ? (
+              <span className="nav-avatar">{(user.prenom || user.nom || user.email || '?').charAt(0).toUpperCase()}</span>
+            ) : (
+              'Compte'
+            )}
+          </NavLink>
+        </li>
+        <li>
           <NavLink to="/" end>
             HeatMap
           </NavLink>
@@ -28,15 +37,6 @@ function Navbar() {
             </NavLink>
           </li>
         )}
-        <li>
-          <NavLink to="/auth" className="nav-account-link">
-            {isAuthenticated && user ? (
-              <span className="nav-avatar">{(user.prenom || user.nom || user.email || '?').charAt(0).toUpperCase()}</span>
-            ) : (
-              'Compte'
-            )}
-          </NavLink>
-        </li>
       </ul>
     </nav>
   )

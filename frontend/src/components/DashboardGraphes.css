@@ -98,4 +98,30 @@
   .graph-box.big {
     grid-column: span 1;
   }
+}.graph-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
+
+
+
+.btn-download:hover {
+  background-color: #4F46E5;
+  color: white;
+  border-color: #4F46E5;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.1), 0 2px 4px -1px rgba(79, 70, 229, 0.06);
+}
+
+.btn-download:active {
+  transform: translateY(0);
+}
+
+.btn-download:hover {
+  opacity: 1;
+  background-color: #f1f5f9;
+  transform: scale(1.1);
+}
+
+

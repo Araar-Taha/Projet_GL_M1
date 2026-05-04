@@ -33,10 +33,14 @@ function InfoPanel({ commune, filters }) {
     )
   }
 
+  const isCommune = commune.code.length > 3
+
   return (
     <div className="info-panel">
       <div className="info-header">
-        <span className="zone-badge">Département {commune.code}</span>
+        <span className="zone-badge">
+          {isCommune ? `Commune ${commune.code}` : `Département ${commune.code}`}
+        </span>
         <h2 className="zone-name">{commune.nom}</h2>
       </div>
 
@@ -57,6 +61,16 @@ function InfoPanel({ commune, filters }) {
             <span className="kpi-value">
               {loading ? '...' : (stats?.totalVentes ? stats.totalVentes.toLocaleString() : 'N/A')}
             </span>
+          </div>
+        </div>
+
+        <div className="kpi-card">
+          <span className="kpi-label">Population</span>
+          <div className="kpi-value-row">
+            <span className="kpi-value">
+              {commune.population ? commune.population.toLocaleString() : 'N/A'}
+            </span>
+            <span className="kpi-unit">Habitants</span>
           </div>
         </div>
 

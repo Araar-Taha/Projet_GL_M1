@@ -20,20 +20,75 @@ router.get('/stats-by-dept', async (req, res) => {
         const stats = await prisma.transaction.groupBy({
             by: ['code_postal'],
             where,
-            _count: { identifiant: true }
+            _count: { identifiant: true },
+            _sum: { valeur_fonciere: true }
         });
 
         // Agréger par département (2 premiers chiffres du code postal)
         const statsObject = stats.reduce((acc, curr) => {
             const deptCode = curr.code_postal.substring(0, 2);
-            acc[deptCode] = (acc[deptCode] || 0) + curr._count.identifiant;
+            if (!acc[deptCode]) {
+                acc[deptCode] = { count: 0, totalVal: 0 };
+            }
+            acc[deptCode].count += curr._count.identifiant;
+            acc[deptCode].totalVal += Number(curr._sum.valeur_fonciere || 0);
             return acc;
         }, {});
 
-        res.json(statsObject);
+        // Calculer la moyenne finale par département
+        const finalStats = {};
+        for (const dept in statsObject) {
+            finalStats[dept] = {
+                count: statsObject[dept].count,
+                avgPrice: statsObject[dept].count > 0 ? Math.round(statsObject[dept].totalVal / statsObject[dept].count) : 0
+            };
+        }
+
+        res.json(finalStats);
     } catch (error) {
         console.error('Stats by dept error:', error);
         res.status(500).json({ error: 'Erreur lors du calcul des stats par département' });
+    }
+});
+
+// GET /api/mutations/stats-by-commune/:deptCode
+// Retourne les stats groupées par code postal pour un département donné
+router.get('/stats-by-commune/:deptCode', async (req, res) => {
+    const { deptCode } = req.params;
+    const { typeMutation, anneeDebut, anneeFin } = req.query;
+
+    try {
+        const where = {
+            code_postal: { startsWith: deptCode }
+        };
+        
+        if (typeMutation) where.type_transaction = { equals: typeMutation, mode: 'insensitive' };
+        where.annee = {
+            gte: parseInt(anneeDebut) || ANNEE_DEFAUT_DEBUT,
+            lte: parseInt(anneeFin) || ANNEE_DEFAUT_FIN
+        };
+
+        const stats = await prisma.transaction.groupBy({
+            by: ['code_postal'],
+            where,
+            _count: { identifiant: true },
+            _sum: { valeur_fonciere: true }
+        });
+
+        // Formater pour le frontend : { "50000": { count, avgPrice }, ... }
+        const formatted = {};
+        stats.forEach(s => {
+            if (!s.code_postal) return;
+            formatted[s.code_postal] = {
+                count: s._count.identifiant,
+                avgPrice: s._count.identifiant > 0 ? Math.round(Number(s._sum.valeur_fonciere || 0) / s._count.identifiant) : 0
+            };
+        });
+
+        res.json(formatted);
+    } catch (error) {
+        console.error('Stats by commune error:', error);
+        res.status(500).json({ error: 'Erreur lors du calcul des stats par commune' });
     }
 });
 

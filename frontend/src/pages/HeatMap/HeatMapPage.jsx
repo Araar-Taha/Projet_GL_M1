@@ -4,7 +4,9 @@ import MapView from './MapView'
 import InfoPanel from './InfoPanel'
 import CompareView from './CompareView'
 import DashboardGraphes from '../../components/DashboardGraphes'
-import { getDepartements } from '../../services/territories.service'
+import { getMutationsStats } from '../../services/mutations.service'
+import { getPopulationStatsByCommune } from '../../services/population.service'
+import { getDepartements, getCommunes, getCommuneMapping } from '../../services/territories.service'
 import './HeatMapPage.css'
 
 function HeatMapPage() {
@@ -20,26 +22,58 @@ function HeatMapPage() {
   const [territoireA, setTerritoireA] = useState(null)
   const [territoireB, setTerritoireB] = useState(null)
   const [departements, setDepartements] = useState([])
+  const [intensityType, setIntensityType] = useState('count') // 'count' ou 'avgPrice'
 
-  // 1. Charger les départements pour avoir accès aux noms
+  // 1. Charger les départements pour les noms au démarrage
   useEffect(() => {
     getDepartements().then(setDepartements).catch(() => setDepartements([]))
   }, [])
 
-  // 2. Synchroniser le panneau de détails avec le filtre département
-  useEffect(() => {
-    if (filters.departement) {
-      const dep = departements.find(d => d.code === filters.departement);
-      if (dep && (!selectedCommune || selectedCommune.code !== dep.code)) {
-        setSelectedCommune({
-          code: dep.code,
-          nom: dep.nom
-        });
+  const handleZoneSelect = async (data) => {
+    if (!data) {
+      setSelectedCommune(null);
+      setFilters(prev => ({ ...prev, departement: '', commune: '' }));
+      return;
+    }
+
+    // On affiche déjà ce qu'on a (nom, code)
+    setSelectedCommune(data);
+    
+    // On met à jour les filtres
+    if (data.code.length > 3) {
+      const depCode = data.code.substring(0, 2);
+      setFilters(prev => ({ ...prev, departement: depCode, commune: data.code }));
+      
+      // Si on n'a pas encore les stats (ex: sélection via menu), on les charge
+      if (data.prixM2 === undefined) {
+        try {
+          // On a besoin du code postal pour les stats
+          const mapping = await getCommuneMapping(depCode);
+          const cp = mapping[data.code] || data.code;
+          const stats = await getMutationsStats(cp, filters);
+          
+          // Récupération de la population si manquante via notre service local
+          let population = data.population;
+          if (population === undefined) {
+             const popStats = await getPopulationStatsByCommune(depCode);
+             population = popStats[cp] || 0;
+          }
+
+          setSelectedCommune(prev => ({
+            ...prev,
+            prixM2: stats.prixMoyen,
+            ventes: stats.totalVentes,
+            transactions: stats.nombreTransactions,
+            population: population
+          }));
+        } catch (err) {
+          console.error("Erreur chargement stats commune:", err);
+        }
       }
     } else {
-      setSelectedCommune(null);
+      setFilters(prev => ({ ...prev, departement: data.code, commune: '' }));
     }
-  }, [filters.departement, departements])
+  };
 
   return (
     <div className="page-container">
@@ -52,6 +86,9 @@ function HeatMapPage() {
             onFiltersChange={setFilters}
             mode={mode}
             onModeChange={setMode}
+            intensityType={intensityType}
+            onIntensityTypeChange={setIntensityType}
+            onCommuneSelect={handleZoneSelect}
             territoireA={territoireA}
             territoireB={territoireB}
             onTerritoireAChange={setTerritoireA}
@@ -63,11 +100,8 @@ function HeatMapPage() {
           {mode === 'explorer' ? (
             <MapView
               filters={filters}
-              onCommuneSelect={(data) => {
-                setSelectedCommune(data);
-                // On synchronise le département sélectionné avec les filtres globaux
-                setFilters(prev => ({ ...prev, departement: data.code }));
-              }}
+              intensityType={intensityType}
+              onCommuneSelect={handleZoneSelect}
             />
           ) : (
             <CompareView

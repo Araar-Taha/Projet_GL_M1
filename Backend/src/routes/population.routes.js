@@ -78,4 +78,71 @@ router.get('/ages/:code', async (req, res) => {
     }
 });
 
+// GET /api/population/stats-by-dept
+router.get('/stats-by-dept', async (req, res) => {
+    try {
+        // On trouve l'année la plus récente disponible
+        const latest = await prisma.population.aggregate({
+            _max: { annee: true }
+        });
+        const maxAnnee = latest._max.annee || 2024;
+
+        const data = await prisma.population.findMany({
+            where: { annee: maxAnnee },
+            select: {
+                code_postal: true,
+                population_totale: true
+            }
+        });
+
+        const stats = {};
+        data.forEach(curr => {
+            if (!curr.code_postal) return;
+            const dept = curr.code_postal.substring(0, 2);
+            stats[dept] = (stats[dept] || 0) + Number(curr.population_totale || 0);
+        });
+
+        res.json(stats);
+    } catch (error) {
+        console.error('Error fetching population stats by dept:', error);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+// GET /api/population/stats-by-commune/:deptCode
+router.get('/stats-by-commune/:deptCode', async (req, res) => {
+    const { deptCode } = req.params;
+    try {
+        const latest = await prisma.population.aggregate({
+            _max: { annee: true }
+        });
+        const maxAnnee = latest._max.annee || 2024;
+
+        const where = {
+            ...whereCodePostal(deptCode),
+            annee: maxAnnee
+        };
+
+        const data = await prisma.population.findMany({
+            where,
+            select: {
+                code_postal: true,
+                population_totale: true
+            }
+        });
+
+        const stats = {};
+        data.forEach(curr => {
+            if (curr.code_postal) {
+                stats[curr.code_postal] = Number(curr.population_totale || 0);
+            }
+        });
+
+        res.json(stats);
+    } catch (error) {
+        console.error('Error fetching population stats by commune:', error);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
 export default router;

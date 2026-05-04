@@ -21,6 +21,9 @@ function FilterPanel({
   territoireB,
   onTerritoireAChange,
   onTerritoireBChange,
+  intensityType,
+  onIntensityTypeChange,
+  onCommuneSelect, // Ajout de cette prop
 }) {
   const [departements, setDepartements] = useState([])
   const [communes, setCommunes] = useState([])
@@ -35,15 +38,30 @@ function FilterPanel({
       });
   }, []);
 
-  // Chargement des communes quand le département change
+  // Chargement des communes quand le département change (Source identique à la carte)
   useEffect(() => {
+    let isMounted = true;
     if (filters.departement) {
-      getCommunes(filters.departement)
-        .then(setCommunes)
-        .catch(() => setCommunes([]))
+      const depCode = String(filters.departement).padStart(2, '0');
+      fetch(`https://geo.api.gouv.fr/departements/${depCode}/communes?format=json`)
+        .then(res => res.json())
+        .then(data => {
+          if (isMounted) {
+            // On harmonise le format : { code, nom }
+            const formatted = data.map(c => ({
+              code: String(c.code),
+              nom: c.nom
+            })).sort((a, b) => a.nom.localeCompare(b.nom));
+            setCommunes(formatted);
+          }
+        })
+        .catch(() => {
+          if (isMounted) setCommunes([]);
+        });
     } else {
-      setCommunes([])
+      setCommunes([]);
     }
+    return () => { isMounted = false; };
   }, [filters.departement])
 
   // Mise à jour immédiate des filtres côté parent (réactivité totale)
@@ -62,8 +80,13 @@ function FilterPanel({
       <div className="filter-group">
         <label>Département</label>
         <select
-          value={filters.departement || ''}
-          onChange={(e) => updateFilter('departement', e.target.value)}
+          value={String(filters.departement || '')}
+          onChange={(e) => {
+            const code = String(e.target.value);
+            updateFilter('departement', code);
+            const dep = departements.find(d => String(d.code) === code);
+            onCommuneSelect(dep || null);
+          }}
         >
           <option value="">Tous les départements</option>
           {departements.map((dep) => (
@@ -75,8 +98,19 @@ function FilterPanel({
       <div className="filter-group">
         <label>Commune</label>
         <select
-          value={filters.commune || ''}
-          onChange={(e) => updateFilter('commune', e.target.value)}
+          value={String(filters.commune || '')}
+          onChange={(e) => {
+            const code = String(e.target.value);
+            updateFilter('commune', code);
+            const com = communes.find(c => String(c.code) === code);
+            if (com) {
+              onCommuneSelect(com);
+            } else {
+              // Si on remet "Toutes les communes", on réaffiche le département
+              const dep = departements.find(d => String(d.code) === String(filters.departement));
+              onCommuneSelect(dep || null);
+            }
+          }}
           disabled={!filters.departement}
         >
           <option value="">Toutes les communes</option>
@@ -138,6 +172,33 @@ function FilterPanel({
           Comparer
         </button>
       </div>
+
+      {mode === 'explorer' && (
+        <>
+          <div className="filter-divider" />
+          <h3 className="filter-title">Intensité Carte</h3>
+          <div className="intensity-toggle">
+            <button
+              className={intensityType === 'count' ? 'active' : ''}
+              onClick={() => onIntensityTypeChange('count')}
+            >
+              Ventes
+            </button>
+            <button
+              className={intensityType === 'avgPrice' ? 'active' : ''}
+              onClick={() => onIntensityTypeChange('avgPrice')}
+            >
+              Prix m²
+            </button>
+            <button
+              className={intensityType === 'population' ? 'active' : ''}
+              onClick={() => onIntensityTypeChange('population')}
+            >
+              Population
+            </button>
+          </div>
+        </>
+      )}
 
       {mode === 'comparer' && (
         <div className="compare-selectors">

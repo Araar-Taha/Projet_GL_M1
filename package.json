@@ -1,0 +1,12 @@
+{
+  "name": "dvf-explorer-root",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm start --prefix Backend\" \"npm run dev --prefix frontend\"",
+    "install-all": "npm install --prefix Backend && npm install --prefix frontend"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

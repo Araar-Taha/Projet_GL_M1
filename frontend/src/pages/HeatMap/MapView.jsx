@@ -40,10 +40,12 @@ function AutoZoom({ filters, geoData }) {
   return null
 }
 
-function getColor(count, maxCount) {
-  if (!count) return '#f8fafc' // Gris très clair si pas de données
+function getColor(value, maxValue) {
+  if (!value || value <= 0) return '#f8fafc'
   
-  const intensity = count / maxCount
+  // Échelle racine carrée : un bon compromis entre linéaire et logarithmique
+  const intensity = Math.sqrt(value / maxValue)
+  
   const colors = [
     '#e2dfff', // Niveau 0
     '#c3c0ff', // Niveau 1
@@ -58,7 +60,7 @@ function getColor(count, maxCount) {
   return colors[index]
 }
 
-function MapView({ filters, onCommuneSelect }) {
+function MapView({ filters, intensityType, onCommuneSelect }) {
   const [geoData, setGeoData] = useState(null)
   const [intensityStats, setIntensityStats] = useState({})
   const [maxCount, setMaxCount] = useState(1)
@@ -75,20 +77,25 @@ function MapView({ filters, onCommuneSelect }) {
   useEffect(() => {
     getStatsByDept(filters).then(stats => {
       setIntensityStats(stats)
-      const counts = Object.values(stats)
-      if (counts.length > 0) {
-        setMaxCount(Math.max(...counts))
+      const values = Object.values(stats).map(s => s[intensityType])
+      if (values.length > 0) {
+        setMaxCount(Math.max(...values))
       } else {
-        setMaxCount(1) // Reset if no data
+        setMaxCount(1)
       }
     }).catch(err => console.error("Map intensity error:", err))
-  }, [filters])
+  }, [filters, intensityType])
 
   const onEachFeature = (feature, layer) => {
     const { nom, code } = feature.properties
-    const count = intensityStats[code] || 0
+    const stat = intensityStats[code]
+    const value = stat ? stat[intensityType] : 0
 
-    layer.bindTooltip(`<b>${nom} (${code})</b><br/>${count} ventes répertoriées`, {
+    const label = intensityType === 'count' 
+      ? `${value} ventes répertoriées` 
+      : `${value.toLocaleString()} €/m² moy.`
+
+    layer.bindTooltip(`<b>${nom} (${code})</b><br/>${label}`, {
       sticky: true,
       className: 'map-tooltip',
     })
@@ -121,11 +128,12 @@ function MapView({ filters, onCommuneSelect }) {
 
   const style = (feature) => {
     const code = feature.properties.code
-    const count = intensityStats[code] || 0
+    const stat = intensityStats[code]
+    const value = stat ? stat[intensityType] : 0
     const isSelected = filters.departement === code
 
     return {
-      fillColor: getColor(count, maxCount),
+      fillColor: getColor(value, maxCount),
       weight: isSelected ? 3 : 1,
       color: isSelected ? '#4F46E5' : '#ffffff',
       fillOpacity: isSelected ? 0.9 : 0.7,
@@ -148,7 +156,7 @@ function MapView({ filters, onCommuneSelect }) {
         {geoData && (
           <>
             <GeoJSON
-              key={`map-${maxCount}-${filters.departement}`}
+              key={`map-${maxCount}-${intensityType}-${filters.departement}`}
               data={geoData}
               style={style}
               onEachFeature={onEachFeature}
@@ -159,9 +167,9 @@ function MapView({ filters, onCommuneSelect }) {
       </MapContainer>
 
       <div className="map-legend">
-        <span className="legend-label">Forte densité</span>
+        <span className="legend-label">Faible intensité</span>
         <div className="legend-gradient" />
-        <span className="legend-label">Faible densité</span>
+        <span className="legend-label">Forte intensité</span>
       </div>
       
       {loading && <div className="map-loader">Chargement des données...</div>}

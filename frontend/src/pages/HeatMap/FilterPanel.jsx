@@ -21,6 +21,8 @@ function FilterPanel({
   territoireB,
   onTerritoireAChange,
   onTerritoireBChange,
+  intensityType,
+  onIntensityTypeChange,
 }) {
   const [departements, setDepartements] = useState([])
   const [communes, setCommunes] = useState([])
@@ -121,8 +123,6 @@ function FilterPanel({
         </div>
       </div>
 
-      <div className="filter-divider" />
-
       <h3 className="filter-title">Mode</h3>
       <div className="mode-toggle">
         <button
@@ -138,6 +138,27 @@ function FilterPanel({
           Comparer
         </button>
       </div>
+      
+      {mode === 'explorer' && (
+        <>
+          <div className="filter-divider" />
+          <h3 className="filter-title">Intensité Carte</h3>
+          <div className="intensity-toggle">
+            <button
+              className={intensityType === 'count' ? 'active' : ''}
+              onClick={() => onIntensityTypeChange('count')}
+            >
+              Volume
+            </button>
+            <button
+              className={intensityType === 'avgPrice' ? 'active' : ''}
+              onClick={() => onIntensityTypeChange('avgPrice')}
+            >
+              Prix m²
+            </button>
+          </div>
+        </>
+      )}
 
       {mode === 'comparer' && (
         <div className="compare-selectors">

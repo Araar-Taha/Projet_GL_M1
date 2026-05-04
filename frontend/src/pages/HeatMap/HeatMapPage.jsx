@@ -4,6 +4,7 @@ import MapView from './MapView'
 import InfoPanel from './InfoPanel'
 import CompareView from './CompareView'
 import DashboardGraphes from '../../components/DashboardGraphes'
+import CustomGraph from '../../components/CustomGraph'
 import { getDepartements } from '../../services/territories.service'
 import './HeatMapPage.css'
 
@@ -92,7 +93,10 @@ function HeatMapPage() {
       {/* BLOC DU BAS  */}
       <div className="bottom-section">
         {mode === 'explorer' && (
-          <DashboardGraphes filters={filters} />
+          <>
+            <DashboardGraphes filters={filters} />
+            <CustomGraph globalFilters={filters} />
+          </>
         )}
       </div>
 

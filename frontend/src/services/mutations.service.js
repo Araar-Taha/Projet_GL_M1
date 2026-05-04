@@ -23,6 +23,11 @@ export async function getStatsByDept(filters = {}) {
   return response.data
 }
 
+export async function getStatsByCommune(deptCode, filters = {}) {
+  const response = await api.get(`/mutations/stats-by-commune/${deptCode}`, { params: filters })
+  return response.data
+}
+
 export async function createTransaction(transactionData) {
   const response = await api.post('/mutations', transactionData)
   return response.data

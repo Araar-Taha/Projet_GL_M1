@@ -30,7 +30,7 @@ router.get('/stats-by-dept', async (req, res) => {
             // On nettoie le code postal de tout espace et on prend les 2 premiers caractères
             const cleanCP = curr.code_postal.trim();
             const deptCode = cleanCP.substring(0, 2);
-            
+
             if (!acc[deptCode]) {
                 acc[deptCode] = { count: 0, totalVal: 0 };
             }
@@ -52,6 +52,47 @@ router.get('/stats-by-dept', async (req, res) => {
     } catch (error) {
         console.error('Stats by dept error:', error);
         res.status(500).json({ error: 'Erreur lors du calcul des stats par département' });
+    }
+});
+
+// GET /api/mutations/stats-by-commune/:deptCode
+// Retourne les stats groupées par code postal pour un département donné
+router.get('/stats-by-commune/:deptCode', async (req, res) => {
+    const { deptCode } = req.params;
+    const { typeMutation, anneeDebut, anneeFin } = req.query;
+
+    try {
+        const where = {
+            code_postal: { startsWith: deptCode }
+        };
+
+        if (typeMutation) where.type_transaction = { equals: typeMutation, mode: 'insensitive' };
+        where.annee = {
+            gte: parseInt(anneeDebut) || ANNEE_DEFAUT_DEBUT,
+            lte: parseInt(anneeFin) || ANNEE_DEFAUT_FIN
+        };
+
+        const stats = await prisma.transaction.groupBy({
+            by: ['code_postal'],
+            where,
+            _count: { identifiant: true },
+            _sum: { valeur_fonciere: true }
+        });
+
+        // Formater pour le frontend : { "50000": { count, avgPrice }, ... }
+        const formatted = {};
+        stats.forEach(s => {
+            if (!s.code_postal) return;
+            formatted[s.code_postal] = {
+                count: s._count.identifiant,
+                avgPrice: s._count.identifiant > 0 ? Math.round(Number(s._sum.valeur_fonciere || 0) / s._count.identifiant) : 0
+            };
+        });
+
+        res.json(formatted);
+    } catch (error) {
+        console.error('Stats by commune error:', error);
+        res.status(500).json({ error: 'Erreur lors du calcul des stats par commune' });
     }
 });
 

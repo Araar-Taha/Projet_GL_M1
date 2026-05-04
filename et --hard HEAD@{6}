@@ -1,0 +1,23 @@
+[33m00b47ea[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mdev[m[33m, [m[1;31morigin/dev[m[33m)[m HEAD@{0}: reset: moving to ORIG_HEAD
+[33mccc280b[m HEAD@{1}: pull origin dev: Fast-forward
+[33m00b47ea[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mdev[m[33m, [m[1;31morigin/dev[m[33m)[m HEAD@{2}: reset: moving to ORIG_HEAD
+[33mccc280b[m HEAD@{3}: pull origin dev: Fast-forward
+[33m00b47ea[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mdev[m[33m, [m[1;31morigin/dev[m[33m)[m HEAD@{4}: commit: test: optimisation de la suite à 6 tests pour les graphiques
+[33m42ca8b5[m HEAD@{5}: commit: test: configuration de l'environnement et 9 tests pour les graphiques(unitaires, intégration, fonctionnels)
+[33m220ad8e[m HEAD@{6}: commit: feat: backend des graphiques et mise à jour du dashboard
+[33m80cfa18[m HEAD@{7}: reset: moving to HEAD
+[33m80cfa18[m HEAD@{8}: pull origin dev: Fast-forward
+[33mc65965a[m HEAD@{9}: commit: feat: ajout des graphiques et de la page classement
+[33m37c63d2[m HEAD@{10}: commit: feat: ajout des graphiques et de la page classement
+[33m3fc7fa4[m HEAD@{11}: commit: fix: application du CSS et finalisation de la structure
+[33m2353b23[m HEAD@{12}: commit (merge): feat: ajout des graphiques et de la page classement
+[33m108853f[m HEAD@{13}: pull origin dev: Fast-forward
+[33m0eac31f[m HEAD@{14}: checkout: moving from dev to dev
+[33m0eac31f[m HEAD@{15}: checkout: moving from DevSan to dev
+[33m2a8522e[m[33m ([m[1;32mDevSan[m[33m)[m HEAD@{16}: commit: feat: préparation du transfert vers dev
+[33m2279329[m[33m ([m[1;31morigin/DevSan[m[33m)[m HEAD@{17}: commit: fix: suppression des graphiques inutilisés dans components
+[33mcd63ca6[m HEAD@{18}: commit: fix: nettoyage de la flèche bleue GitHub
+[33m3ba258f[m HEAD@{19}: commit: feat: ajout graphes initiaux et page classement
+[33m0eac31f[m HEAD@{20}: checkout: moving from dev to DevSan
+[33m0eac31f[m HEAD@{21}: checkout: moving from master to dev
+[33m8b69dd7[m[33m ([m[1;31morigin/master[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmaster[m[33m)[m HEAD@{22}: clone: from https://github.com/Araar-Taha/Projet_GL_M1

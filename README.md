@@ -60,7 +60,7 @@ Ces donnees permettent de calculer le prix moyen au m2.
 - Node.js
 - Express
 - Prisma
-- PostgreSQL
+- Supabase
 
 ## Structure du projet
 
@@ -89,7 +89,7 @@ npm run dev
 
 ## Base de donnees
 
-Le projet utilise une base PostgreSQL.
+Le projet utilise une base Supabase.
 
 Il faut configurer la variable `DATABASE_URL` dans un fichier `.env` dans le dossier `Backend`.
 

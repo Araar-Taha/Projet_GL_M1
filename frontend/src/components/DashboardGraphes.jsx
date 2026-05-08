@@ -1,161 +1,272 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 import api from '../services/api';
-import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  BarChart, Bar, Cell, PieChart, Pie, Legend
-} from 'recharts';
 import './DashboardGraphes.css';
 
 const DashboardGraphes = ({ filters }) => {
   const [data, setData] = useState({ evolution: [], distribution: [], ages: [] });
   const [loading, setLoading] = useState(false);
+  const [bottomNode, setBottomNode] = useState(null);
+
+  useEffect(() => {
+    const node = document.querySelector('.bottom-section');
+    if (node) setBottomNode(node);
+  }, []);
+
+  const downloadPDF = async () => {
+    const element = document.querySelector('.bottom-section');
+    if (!element) return;
+
+    const btn = document.querySelector('.download-btn-wrapper');
+    if (btn) btn.style.visibility = 'hidden';
+
+    const canvas = await html2canvas(element, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: '#f8fafc'
+    });
+
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+
+    const fileName = filters.commune
+      ? `Rapport_${filters.departement}_${filters.commune}.pdf`
+      : `Rapport_Departement_${filters.departement}.pdf`;
+
+    pdf.save(fileName);
+
+    if (btn) btn.style.visibility = 'visible';
+  };
 
   useEffect(() => {
     const fetchStats = async () => {
       if (!filters?.departement) return;
 
       setLoading(true);
+
       try {
         const response = await api.get('/graphs/all', {
           params: {
             departement: filters.departement,
             commune: filters.commune || '',
             typeMutation: filters.typeMutation || '',
-            anneeDebut: filters.anneeDebut || 2020,
-            anneeFin: filters.anneeFin || 2024
+            anneeDebut: parseInt(filters.anneeDebut) || 2020,
+            anneeFin: parseInt(filters.anneeFin) || 2024
           }
         });
-        setData(response.data);
+
+        if (response.data) {
+          setData(response.data);
+        }
       } catch (error) {
-        console.error("Erreur API Dashboard:", error);
+        console.error("Erreur API Dashboard lors du filtrage:", error);
       } finally {
         setLoading(false);
       }
     };
-    fetchStats();
-  }, [filters]);
 
+    fetchStats();
+
+  }, [filters?.departement, filters?.commune, filters?.typeMutation, filters?.anneeDebut, filters?.anneeFin]);
+
+
+  // Affichage de l'état "vide" si aucun département n'est sélectionné
   if (!filters?.departement) {
     return (
       <div className="dashboard-graphes">
-        <div className="graph-box full-width">
-          <div className="welcome-message">
-            <span>🗺️</span>
-            <h3>Analyse Territoriale</h3>
-            <p>Sélectionnez un département sur la carte pour explorer les données immobilières et démographiques.</p>
+        <div className="graph-box big welcome-container">
+          <div style={{ textAlign: 'center', color: '#64748b' }}>
+            <p style={{ fontSize: '48px', margin: '0' }}>🗺️</p>
+            <h3 style={{ marginTop: '10px', color: '#1e293b' }}>Analyse Territoriale</h3>
+            <p style={{ fontSize: '14px' }}>Sélectionnez un département sur la carte.</p>
           </div>
         </div>
       </div>
     );
   }
 
+  const genderData = data.ages?.filter(a => a.label === 'Hommes' || a.label === 'Femmes') || [];
+  const ageStructureData = data.ages?.filter(a => a.label !== 'Hommes' && a.label !== 'Femmes') || [];
+  const evolution = data.evolution || [];
+  const distribution = data.distribution || [];
+
+  // CONFIGURATION GRAPHIQUE ÉVOLUTION
+  const margin = { top: 40, right: 15, bottom: 40, left: 70 };
+  const width = 900;
+  const height = 250;
+
+  const maxPrice = evolution.length > 0 ? Math.max(...evolution.map(d => d.prixMoyen)) * 1.3 : 1;
+  const maxVol = evolution.length > 0 ? Math.max(...evolution.map(d => d.nbVentes || 0)) * 1.5 : 1;
+
+  const getX = (index) => {
+    if (evolution.length <= 1) return margin.left + (width - margin.left - margin.right) / 2;
+    return margin.left + (index / (evolution.length - 1)) * (width - margin.left - margin.right);
+  };
+
+  const getYPrice = (price) => (height - margin.bottom) - (price / maxPrice) * (height - margin.top - margin.bottom);
+  const getYVol = (vol) => (height - margin.bottom) - (vol / maxVol) * (height - margin.top - margin.bottom) * 0.6;
+
+  const totalCircumference = 314;
   const COLORS = ['#8B5CF6', '#60A5FA', '#F472B6', '#10B981', '#F59E0B', '#94A3B8'];
+  let cumulativeOffset = 0;
 
   return (
-    <div className="dashboard-graphes">
+    <div className="dashboard-wrapper" style={{ backgroundColor: '#f8fafc', paddingBottom: '20px' }}>
 
-      {/* 1. ÉVOLUTION DU PRIX AU M² */}
-      <div className="graph-box big">
-        <div className="graph-header">
-          <h3>Évolution du prix au m²</h3>
-        </div>
-        <div className="graph-content">
-          {loading ? (
-            <div className="loader-mini">Chargement...</div>
-          ) : data.evolution.length > 0 ? (
-            <ResponsiveContainer width="100%" height={200}>
-              <AreaChart data={data.evolution}>
-                <defs>
-                  <linearGradient id="colorPrix" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="annee" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
-                <YAxis hide />
-                <Tooltip
-                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                  formatter={(value) => [`${value.toLocaleString()} €`, "Prix Moyen"]}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="prixMoyen"
-                  stroke="#8B5CF6"
-                  strokeWidth={3}
-                  fillOpacity={1}
-                  fill="url(#colorPrix)"
-                  animationDuration={1500}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="no-data">Aucune donnée sur cette période.</div>
-          )}
-        </div>
-      </div>
+      <div className="dashboard-graphes">
 
-      {/* 2. RÉPARTITION PAR ÂGE */}
-      <div className="graph-box">
-        <div className="graph-header">
-          <h3>Structure de la population</h3>
-        </div>
-        <div className="graph-content">
-          {loading ? (
-            <div className="loader-mini">...</div>
-          ) : data.ages.length > 0 ? (
-            <ResponsiveContainer width="100%" height={180}>
-              <BarChart data={data.ages} layout="vertical" margin={{ left: -20 }}>
-                <XAxis type="number" hide />
-                <YAxis dataKey="label" type="category" axisLine={false} tickLine={false} tick={{ fill: '#1e293b', fontSize: 11 }} />
-                <Tooltip formatter={(value) => [`${value}%`, "Proportion"]} />
-                <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={20}>
-                  {data.ages.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color || COLORS[index % COLORS.length]} />
+        {/* 1. ÉVOLUTION DU MARCHÉ */}
+        <div className="graph-box big">
+          <div className="graph-header">
+            <h3>Évolution du marché {filters.commune ? `à ${filters.commune}` : `en ${filters.departement}`}</h3>
+          </div>
+          <div className="graph-content">
+            {loading ? (
+              <div style={{ display: 'flex', justifyContent: 'center', padding: '50px' }}>
+                <p className="loading">Mise à jour des données...</p>
+              </div>
+            ) : evolution.length > 0 ? (
+              <div className="chart-wrapper">
+                <svg viewBox={`0 0 ${width} ${height}`} className="main-chart-svg" style={{ width: '100%', height: 'auto', overflow: 'visible' }}>
+                  <defs>
+                    <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#8B5CF6" stopOpacity="0.2" />
+                      <stop offset="100%" stopColor="#8B5CF6" stopOpacity="0" />
+                    </linearGradient>
+                  </defs>
+
+                  {evolution.map((item, i) => (
+                    <rect key={`vol-${i}`} x={getX(i) - 12} y={getYVol(item.nbVentes)} width="24" height={(height - margin.bottom) - getYVol(item.nbVentes)} fill="#e2e8f0" rx="3" />
                   ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="no-data">Profil indisponible.</div>
-          )}
-        </div>
-      </div>
 
-      {/* 3. TYPES DE MUTATIONS */}
-      <div className="graph-box">
-        <div className="graph-header">
-          <h3>Types de Transactions</h3>
-        </div>
-        <div className="graph-content">
-          {loading ? (
-            <div className="loader-mini">...</div>
-          ) : data.distribution.length > 0 ? (
-            <ResponsiveContainer width="100%" height={180}>
-              <PieChart>
-                <Pie
-                  data={data.distribution}
-                  innerRadius={50}
-                  outerRadius={70}
-                  paddingAngle={5}
-                  dataKey="count"
-                  nameKey="name"
-                  animationDuration={1500}
-                >
-                  {data.distribution.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  <path d={`M${getX(0)},${height - margin.bottom} ${evolution.map((item, i) => `L${getX(i)},${getYPrice(item.prixMoyen)}`).join(' ')} L${getX(evolution.length - 1)},${height - margin.bottom} Z`} fill="url(#areaGrad)" />
+
+                  <path d={evolution.map((item, i) => (i === 0 ? 'M' : 'L') + `${getX(i)},${getYPrice(item.prixMoyen)}`).join(' ')} fill="none" stroke="#8B5CF6" strokeWidth="4" strokeLinecap="round" />
+
+                  {evolution.map((item, i) => (
+                    <g key={`data-${i}`}>
+                      <circle cx={getX(i)} cy={getYPrice(item.prixMoyen)} r="6" fill="#8B5CF6" stroke="white" strokeWidth="2" />
+                      <text x={getX(i)} y={getYPrice(item.prixMoyen) - 15} fontSize="14" textAnchor="middle" fontWeight="800" fill="#1e293b">{item.prixMoyen.toLocaleString()}€</text>
+                      <text x={getX(i)} y={height - 10} fontSize="14" textAnchor="middle" fontWeight="bold" fill="#64748b">{item.annee}</text>
+                    </g>
                   ))}
-                </Pie>
-                <Tooltip />
-                <Legend iconType="circle" wrapperStyle={{ fontSize: '11px' }} />
-              </PieChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="no-data">Répartition non disponible.</div>
-          )}
+                </svg>
+                <div className="chart-legend">
+                  <div className="legend-item"><span className="line-indicator"></span>Prix m² moyen</div>
+                  <div className="legend-item"><span className="bar-indicator"></span>Volume de mutation</div>
+                </div>
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '40px' }}>
+                <p className="no-data">Aucune donnée disponible pour cette commune sur la période sélectionnée.</p>
+              </div>
+            )}
+          </div>
         </div>
+
+        {/* 2. RÉPARTITION PAR GENRE */}
+        <div className="graph-box">
+          <div className="graph-header"><h3>Répartition par genre</h3></div>
+          <div className="graph-content">
+            <div className="gender-unified-container" style={{ padding: '15px 0' }}>
+              <div className="gender-legend" style={{ marginBottom: '15px' }}>
+                <div className="legend-item male">
+                  <span className="dot blue"></span>
+                  <span className="label">Hommes</span>
+                  <span className="val" style={{ fontSize: '20px' }}>{genderData.find(g => g.label === 'Hommes')?.value || 0}%</span>
+                </div>
+                <div className="legend-item female">
+                  <span className="val" style={{ fontSize: '20px' }}>{genderData.find(g => g.label === 'Femmes')?.value || 0}%</span>
+                  <span className="label">Femmes</span>
+                  <span className="dot pink"></span>
+                </div>
+              </div>
+              <div className="gender-single-bar" style={{ height: '20px', borderRadius: '10px', background: '#f1f5f9', overflow: 'hidden', display: 'flex' }}>
+                <div style={{ width: `${genderData.find(g => g.label === 'Hommes')?.value || 0}%`, backgroundColor: '#60A5FA', transition: 'width 0.5s' }}></div>
+                <div style={{ width: `${genderData.find(g => g.label === 'Femmes')?.value || 0}%`, backgroundColor: '#F472B6', transition: 'width 0.5s' }}></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 3. STRUCTURE PAR ÂGE */}
+        <div className="graph-box">
+          <div className="graph-header"><h3>Tranches d'âges</h3></div>
+          <div className="graph-content">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '22px', marginTop: '15px' }}>
+              {ageStructureData.length > 0 ? ageStructureData.map((age, i) => (
+                <div key={i}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '13px', fontWeight: '600' }}>
+                    <span>{age.label}</span>
+                    <span style={{ color: age.color || COLORS[i % COLORS.length] }}>{age.value}%</span>
+                  </div>
+                  <div style={{ height: '14px', background: '#f1f5f9', borderRadius: '6px', overflow: 'hidden' }}>
+                    <div style={{ width: `${age.value}%`, height: '100%', backgroundColor: age.color || COLORS[i % COLORS.length], transition: 'width 1s ease-in-out' }}></div>
+                  </div>
+                </div>
+              )) : <p className="no-data">Données démographiques indisponibles.</p>}
+            </div>
+          </div>
+        </div>
+
+        {/* 4. RÉPARTITION DES MUTATIONS */}
+        <div className="graph-box big">
+          <div className="graph-header"><h3>Répartition des mutations</h3></div>
+          <div className="graph-content">
+            {distribution.length > 0 ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '40px', marginTop: '15px' }}>
+                <div style={{ position: 'relative', width: '180px', height: '180px', flexShrink: 0 }}>
+                  <svg viewBox="0 0 120 120" style={{ transform: 'rotate(-90deg)', width: '100%', height: '100%' }}>
+                    <circle cx="60" cy="60" r="50" fill="none" stroke="#f1f5f9" strokeWidth="15" />
+                    {distribution.map((item, i) => {
+                      const dash = `${(item.value / 100) * totalCircumference} ${totalCircumference}`;
+                      const offset = -cumulativeOffset;
+                      cumulativeOffset += (item.value / 100) * totalCircumference;
+                      return (
+                        <circle key={i} cx="60" cy="60" r="50" fill="none" stroke={COLORS[i % COLORS.length]} strokeWidth="15" strokeDasharray={dash} strokeDashoffset={offset} style={{ transition: 'stroke-dashoffset 0.5s' }} />
+                      );
+                    })}
+                  </svg>
+                  <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
+                    <div style={{ fontSize: '22px', fontWeight: 'bold', color: '#1e293b' }}>
+                      {distribution.reduce((acc, c) => acc + c.count, 0).toLocaleString()}
+                    </div>
+                    <div style={{ fontSize: '10px', color: '#64748b', textTransform: 'uppercase' }}>Total</div>
+                  </div>
+                </div>
+                <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '12px' }}>
+                  {distribution.map((item, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '12px', padding: '12px', backgroundColor: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                      <div style={{ width: '12px', height: '12px', borderRadius: '3px', backgroundColor: COLORS[i % COLORS.length] }}></div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontWeight: 'bold' }}>{item.name}</div>
+                        <div style={{ fontSize: '11px', color: '#64748b' }}>{item.count.toLocaleString()} mutations</div>
+                      </div>
+                      <div style={{ fontWeight: 'bold', color: COLORS[i % COLORS.length], fontSize: '14px' }}>{item.value}%</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : <p className="no-data">Aucune donnée de mutation pour cette sélection.</p>}
+          </div>
+        </div>
+
       </div>
 
+      {bottomNode && createPortal(
+        <div className="download-btn-wrapper" style={{ display: 'flex', justifyContent: 'center', padding: '20px 0', width: '100%' }}>
+          <button onClick={downloadPDF} className="download-pdf-btn">
+            📥 Télécharger le rapport complet {filters.commune ? `de ${filters.commune}` : `du ${filters.departement}`}
+          </button>
+        </div>,
+        bottomNode
+      )}
     </div>
   );
 };

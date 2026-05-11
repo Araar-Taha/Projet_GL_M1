@@ -68,7 +68,7 @@ function InfoPanel({ commune, filters }) {
           <span className="kpi-label">Population</span>
           <div className="kpi-value-row">
             <span className="kpi-value">
-              {commune.population ? commune.population.toLocaleString() : 'N/A'}
+              {loading ? '...' : (stats?.population || commune.population ? (stats?.population || commune.population).toLocaleString() : 'N/A')}
             </span>
             <span className="kpi-unit">Habitants</span>
           </div>

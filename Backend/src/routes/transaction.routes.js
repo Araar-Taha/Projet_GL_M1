@@ -158,10 +158,26 @@ router.get('/stats/:code', async (req, res) => {
             _count: { identifiant: true }
         });
 
+        // Récupérer la population (dernière année connue)
+        const popWhere = whereCodePostal(code);
+        const latestPop = await prisma.population.aggregate({
+            where: popWhere,
+            _max: { annee: true }
+        });
+        
+        const popStats = await prisma.population.aggregate({
+            where: {
+                ...popWhere,
+                annee: latestPop._max.annee || 2022
+            },
+            _sum: { population_totale: true }
+        });
+
         res.json({
             prixMoyen: Math.round(stats._avg.valeur_fonciere || 0),
             totalVentes: stats._sum.nombre_mutation || 0,
-            nombreTransactions: stats._count.identifiant
+            nombreTransactions: stats._count.identifiant,
+            population: Number(popStats._sum.population_totale || 0)
         });
     } catch (error) {
         console.error('Stats error:', error);

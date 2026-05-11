@@ -162,7 +162,11 @@ function MapView({ filters, intensityType, onCommuneSelect }) {
 
     layer.on('click', async () => {
       if (!isCommune) {
-        onCommuneSelect({ code, nom, population: value })
+        onCommuneSelect({ 
+          code, 
+          nom, 
+          population: intensityType === 'population' ? value : undefined 
+        })
         return
       }
 
@@ -175,7 +179,7 @@ function MapView({ filters, intensityType, onCommuneSelect }) {
           prixM2: stats.prixMoyen,
           ventes: stats.totalVentes,
           transactions: stats.nombreTransactions,
-          population: value
+          population: stats.population
         })
       } catch (err) {
         console.error('Error fetching commune stats:', err)

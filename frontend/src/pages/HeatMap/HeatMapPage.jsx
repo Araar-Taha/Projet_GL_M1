@@ -39,12 +39,12 @@ function HeatMapPage() {
 
     // On affiche déjà ce qu'on a (nom, code)
     setSelectedCommune(data);
-    
+
     // On met à jour les filtres
     if (data.code.length > 3) {
       const depCode = data.code.substring(0, 2);
       setFilters(prev => ({ ...prev, departement: depCode, commune: data.code }));
-      
+
       // Si on n'a pas encore les stats (ex: sélection via menu), on les charge
       if (data.prixM2 === undefined) {
         try {
@@ -52,12 +52,12 @@ function HeatMapPage() {
           const mapping = await getCommuneMapping(depCode);
           const cp = mapping[data.code] || data.code;
           const stats = await getMutationsStats(cp, filters);
-          
+
           // Récupération de la population si manquante via notre service local
           let population = data.population;
           if (population === undefined) {
-             const popStats = await getPopulationStatsByCommune(depCode);
-             population = popStats[cp] || 0;
+            const popStats = await getPopulationStatsByCommune(depCode);
+            population = popStats[cp] || 0;
           }
 
           setSelectedCommune(prev => ({
@@ -78,7 +78,7 @@ function HeatMapPage() {
 
   return (
     <div className="page-container">
-      
+
       {/* BLOC DU HAUT */}
       <div className="top-section">
         <div className="filters-sidebar">
@@ -124,8 +124,8 @@ function HeatMapPage() {
       <div className="bottom-section">
         {mode === 'explorer' && (
           <>
-            <DashboardGraphes filters={filters} />
             <CustomGraph globalFilters={filters} />
+            <DashboardGraphes filters={filters} hideEvolution={true} />
           </>
         )}
       </div>

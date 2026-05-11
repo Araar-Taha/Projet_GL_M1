@@ -93,24 +93,7 @@ const DashboardGraphes = ({ filters }) => {
 
   const genderData = data.ages?.filter(a => a.label === 'Hommes' || a.label === 'Femmes') || [];
   const ageStructureData = data.ages?.filter(a => a.label !== 'Hommes' && a.label !== 'Femmes') || [];
-  const evolution = data.evolution || [];
   const distribution = data.distribution || [];
-
-  // CONFIGURATION GRAPHIQUE ÉVOLUTION
-  const margin = { top: 40, right: 15, bottom: 40, left: 70 };
-  const width = 900;
-  const height = 250;
-
-  const maxPrice = evolution.length > 0 ? Math.max(...evolution.map(d => d.prixMoyen)) * 1.3 : 1;
-  const maxVol = evolution.length > 0 ? Math.max(...evolution.map(d => d.nbVentes || 0)) * 1.5 : 1;
-
-  const getX = (index) => {
-    if (evolution.length <= 1) return margin.left + (width - margin.left - margin.right) / 2;
-    return margin.left + (index / (evolution.length - 1)) * (width - margin.left - margin.right);
-  };
-
-  const getYPrice = (price) => (height - margin.bottom) - (price / maxPrice) * (height - margin.top - margin.bottom);
-  const getYVol = (vol) => (height - margin.bottom) - (vol / maxVol) * (height - margin.top - margin.bottom) * 0.6;
 
   const totalCircumference = 314;
   const COLORS = ['#8B5CF6', '#60A5FA', '#F472B6', '#10B981', '#F59E0B', '#94A3B8'];
@@ -120,55 +103,6 @@ const DashboardGraphes = ({ filters }) => {
     <div className="dashboard-wrapper" style={{ backgroundColor: '#f8fafc', paddingBottom: '20px' }}>
 
       <div className="dashboard-graphes">
-
-        {/* 1. ÉVOLUTION DU MARCHÉ */}
-        <div className="graph-box big">
-          <div className="graph-header">
-            <h3>Évolution du marché {filters.commune ? `à ${filters.commune}` : `en ${filters.departement}`}</h3>
-          </div>
-          <div className="graph-content">
-            {loading ? (
-              <div style={{ display: 'flex', justifyContent: 'center', padding: '50px' }}>
-                <p className="loading">Mise à jour des données...</p>
-              </div>
-            ) : evolution.length > 0 ? (
-              <div className="chart-wrapper">
-                <svg viewBox={`0 0 ${width} ${height}`} className="main-chart-svg" style={{ width: '100%', height: 'auto', overflow: 'visible' }}>
-                  <defs>
-                    <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#8B5CF6" stopOpacity="0.2" />
-                      <stop offset="100%" stopColor="#8B5CF6" stopOpacity="0" />
-                    </linearGradient>
-                  </defs>
-
-                  {evolution.map((item, i) => (
-                    <rect key={`vol-${i}`} x={getX(i) - 12} y={getYVol(item.nbVentes)} width="24" height={(height - margin.bottom) - getYVol(item.nbVentes)} fill="#e2e8f0" rx="3" />
-                  ))}
-
-                  <path d={`M${getX(0)},${height - margin.bottom} ${evolution.map((item, i) => `L${getX(i)},${getYPrice(item.prixMoyen)}`).join(' ')} L${getX(evolution.length - 1)},${height - margin.bottom} Z`} fill="url(#areaGrad)" />
-
-                  <path d={evolution.map((item, i) => (i === 0 ? 'M' : 'L') + `${getX(i)},${getYPrice(item.prixMoyen)}`).join(' ')} fill="none" stroke="#8B5CF6" strokeWidth="4" strokeLinecap="round" />
-
-                  {evolution.map((item, i) => (
-                    <g key={`data-${i}`}>
-                      <circle cx={getX(i)} cy={getYPrice(item.prixMoyen)} r="6" fill="#8B5CF6" stroke="white" strokeWidth="2" />
-                      <text x={getX(i)} y={getYPrice(item.prixMoyen) - 15} fontSize="14" textAnchor="middle" fontWeight="800" fill="#1e293b">{item.prixMoyen.toLocaleString()}€</text>
-                      <text x={getX(i)} y={height - 10} fontSize="14" textAnchor="middle" fontWeight="bold" fill="#64748b">{item.annee}</text>
-                    </g>
-                  ))}
-                </svg>
-                <div className="chart-legend">
-                  <div className="legend-item"><span className="line-indicator"></span>Prix m² moyen</div>
-                  <div className="legend-item"><span className="bar-indicator"></span>Volume de mutation</div>
-                </div>
-              </div>
-            ) : (
-              <div style={{ textAlign: 'center', padding: '40px' }}>
-                <p className="no-data">Aucune donnée disponible pour cette commune sur la période sélectionnée.</p>
-              </div>
-            )}
-          </div>
-        </div>
 
         {/* 2. RÉPARTITION PAR GENRE */}
         <div className="graph-box">
@@ -262,7 +196,7 @@ const DashboardGraphes = ({ filters }) => {
       {bottomNode && createPortal(
         <div className="download-btn-wrapper" style={{ display: 'flex', justifyContent: 'center', padding: '20px 0', width: '100%' }}>
           <button onClick={downloadPDF} className="download-pdf-btn">
-            📥 Télécharger le rapport complet {filters.commune ? `de ${filters.commune}` : `du ${filters.departement}`}
+            Télécharger le rapport complet {filters.commune ? `de ${filters.commune}` : `du ${filters.departement}`}
           </button>
         </div>,
         bottomNode

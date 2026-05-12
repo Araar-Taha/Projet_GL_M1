@@ -217,7 +217,7 @@ function FilterPanel({
               className={intensityType === 'avgPrice' ? 'active' : ''}
               onClick={() => onIntensityTypeChange('avgPrice')}
             >
-              Prix m²
+              Prix Moyen
             </button>
             <button
               className={intensityType === 'population' ? 'active' : ''}

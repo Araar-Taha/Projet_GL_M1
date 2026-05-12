@@ -46,7 +46,7 @@ function InfoPanel({ commune, filters }) {
 
       <div className="stats-kpi-container">
         <div className="kpi-card">
-          <span className="kpi-label">Prix Moyen m²</span>
+          <span className="kpi-label">Prix de vente moyen</span>
           <div className="kpi-value-row">
             <span className="kpi-value">
               {loading ? '...' : (stats?.prixMoyen ? `${stats.prixMoyen.toLocaleString()} €` : 'N/A')}

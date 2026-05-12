@@ -153,7 +153,7 @@ function MapView({ filters, intensityType, onCommuneSelect }) {
       ? `${value.toLocaleString()} habitants`
       : intensityType === 'count' 
         ? `${value.toLocaleString()} ventes` 
-        : `${value.toLocaleString()} €/m²`
+        : `${value.toLocaleString()} €`
 
     layer.bindTooltip(`<b>${nom} (${code})</b><br/>${label}`, {
       sticky: true,

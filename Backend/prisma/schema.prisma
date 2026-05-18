@@ -1,0 +1,51 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model localisation {
+  identifiant      Int     @id @default(autoincrement())
+  code_geo         String? @db.VarChar(50)
+  code_postal      String? @db.VarChar(10)
+  code_commune     String? @db.VarChar(50)
+  nom_commune      String? @db.VarChar(150)
+  code_departement String? @db.VarChar(10)
+}
+
+model population {
+  identifiant            Int     @id @default(autoincrement())
+  population_totale      BigInt?
+  annee                  Int?
+  nombre_homme           BigInt?
+  nombre_femme           BigInt?
+  nombre_enfant          BigInt?
+  nombre_jeune_adulte    BigInt?
+  nombre_senior_retraite BigInt?
+  code_postal            String? @db.VarChar
+}
+
+model transaction {
+  identifiant      Int      @id @default(autoincrement())
+  type_transaction String?  @db.VarChar(50)
+  valeur_fonciere  Decimal? @db.Decimal(15, 2)
+  nombre_mutation  Int?
+  annee            Int?
+  code_postal      String?  @db.VarChar
+}
+
+model utilisateur {
+  identifiant   Int       @id @default(autoincrement())
+  nom           String?   @db.VarChar(100)
+  prenom        String?   @db.VarChar(100)
+  email         String?   @unique @db.VarChar(150)
+  mot_de_pass   String?
+  date_creation DateTime? @default(now()) @db.Timestamp(6)
+}
+
+model departement {
+  code String @id @db.VarChar(10)
+  nom  String @db.VarChar(100)
+}

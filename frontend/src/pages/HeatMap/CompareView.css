@@ -1,0 +1,108 @@
+.compare-view {
+  padding: 1.5rem;
+  background: white;
+  border-radius: 1.5rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+  margin-top: 1rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.compare-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.compare-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #1e293b;
+}
+
+.compare-badges {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.badge {
+  padding: 0.5rem 1rem;
+  border-radius: 2rem;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.badge-a { background: #e0e7ff; color: #4F46E5; }
+.badge-b { background: #ffe4e6; color: #F43F5E; }
+.badge-vs { color: #94a3b8; font-weight: 800; font-style: italic; }
+
+.compare-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 1.5rem;
+}
+
+.compare-card {
+  padding: 1.5rem;
+  background: #f8fafc;
+  border-radius: 1.25rem;
+  border: 1px solid #e2e8f0;
+}
+
+.compare-card h4 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  color: #64748b;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.empty-compare {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  background: #f1f5f9;
+  border: 2px dashed #cbd5e1;
+}
+
+.compare-message p {
+  color: #64748b;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.loader-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: #4F46E5;
+  z-index: 10;
+}
+
+@media (max-width: 768px) {
+  .compare-grid { grid-template-columns: 1fr; }
+  .compare-header { flex-direction: column; align-items: flex-start; }
+}
+
+/* Animations */
+.animate-scale-in {
+  animation: scaleIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.delay-1 { animation-delay: 0.1s; }
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}

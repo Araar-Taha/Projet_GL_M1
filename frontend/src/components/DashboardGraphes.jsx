@@ -4,16 +4,64 @@ import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import api from '../services/api';
 import './DashboardGraphes.css';
+import { getDepartements, getCommunes } from '../services/territories.service';
 
 const DashboardGraphes = ({ filters }) => {
   const [data, setData] = useState({ evolution: [], distribution: [], ages: [] });
   const [loading, setLoading] = useState(false);
   const [bottomNode, setBottomNode] = useState(null);
+  const [deptName, setDeptName] = useState('');
+  const [communeName, setCommuneName] = useState('');
 
   useEffect(() => {
     const node = document.querySelector('.bottom-section');
     if (node) setBottomNode(node);
   }, []);
+
+  useEffect(() => {
+    const fetchNames = async () => {
+      if (!filters?.departement) {
+        setDeptName('');
+        setCommuneName('');
+        return;
+      }
+      try {
+        const deps = await getDepartements();
+        const dep = deps.find(d => String(d.code) === String(filters.departement));
+        if (dep) {
+          setDeptName(dep.nom);
+        } else {
+          setDeptName(filters.departement);
+        }
+
+        if (filters.commune) {
+          const communes = await getCommunes(filters.departement);
+          const com = communes.find(c => String(c.code) === String(filters.commune));
+          if (com) {
+            setCommuneName(com.nom);
+          } else {
+            const res = await fetch(`https://geo.api.gouv.fr/communes/${filters.commune}?format=json`);
+            if (res.ok) {
+              const geoData = await res.json();
+              if (geoData && geoData.nom) {
+                setCommuneName(geoData.nom);
+              } else {
+                setCommuneName(filters.commune);
+              }
+            } else {
+              setCommuneName(filters.commune);
+            }
+          }
+        } else {
+          setCommuneName('');
+        }
+      } catch (error) {
+        console.error("Erreur lors de la récupération des noms :", error);
+      }
+    };
+
+    fetchNames();
+  }, [filters?.departement, filters?.commune]);
 
   const downloadPDF = async () => {
     const element = document.querySelector('.bottom-section');
@@ -35,9 +83,11 @@ const DashboardGraphes = ({ filters }) => {
 
     pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
 
-    const fileName = filters.commune
-      ? `Rapport_${filters.departement}_${filters.commune}.pdf`
-      : `Rapport_Departement_${filters.departement}.pdf`;
+    const cleanDept = (deptName || filters.departement || '').replace(/[^a-zA-Z0-9]/g, '_');
+    const cleanCommune = communeName ? communeName.replace(/[^a-zA-Z0-9]/g, '_') : '';
+    const fileName = cleanCommune
+      ? `Rapport_${cleanDept}_${cleanCommune}.pdf`
+      : `Rapport_Departement_${cleanDept}.pdf`;
 
     pdf.save(fileName);
 
@@ -196,7 +246,7 @@ const DashboardGraphes = ({ filters }) => {
       {bottomNode && createPortal(
         <div className="download-btn-wrapper" style={{ display: 'flex', justifyContent: 'center', padding: '20px 0', width: '100%' }}>
           <button onClick={downloadPDF} className="download-pdf-btn">
-            Télécharger le rapport complet {filters.commune ? `de ${filters.commune}` : `du ${filters.departement}`}
+            Télécharger le rapport complet {communeName ? `de ${communeName}` : `du ${deptName || filters.departement}`}
           </button>
         </div>,
         bottomNode

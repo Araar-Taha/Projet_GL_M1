@@ -84,6 +84,10 @@ const CustomGraph = ({ globalFilters }) => {
                   <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.25} />
                   <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0} />
                 </linearGradient>
+                <linearGradient id="colorMutBar" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#34D399" stopOpacity={0.85} />
+                  <stop offset="95%" stopColor="#059669" stopOpacity={0.35} />
+                </linearGradient>
               </defs>
 
               <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" vertical={true} horizontal={true} />
@@ -116,12 +120,12 @@ const CustomGraph = ({ globalFilters }) => {
                 <YAxis
                   yAxisId="mut"
                   orientation="right"
-                  stroke="#94a3b8"
+                  stroke="#10B981"
                   tick={{ fontSize: 10, fontWeight: 800 }}
                   axisLine={true}
                   tickLine={true}
                   width={60}
-                  label={{ value: 'Volume', angle: 90, position: 'right', offset: 10, style: { fontSize: '10px', fill: '#94a3b8', fontWeight: 800 } }}
+                  label={{ value: 'Volume', angle: 90, position: 'right', offset: 10, style: { fontSize: '10px', fill: '#10B981', fontWeight: 800 } }}
                 />
               )}
 
@@ -152,7 +156,7 @@ const CustomGraph = ({ globalFilters }) => {
                   yAxisId="mut"
                   dataKey="mutations"
                   name="Volume (Mutations)"
-                  fill="#e2e8f0"
+                  fill="url(#colorMutBar)"
                   barSize={32}
                   radius={[6, 6, 0, 0]}
                 />

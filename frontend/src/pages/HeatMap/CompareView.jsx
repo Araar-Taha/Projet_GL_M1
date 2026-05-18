@@ -19,7 +19,7 @@ function CompareView({ territoireA, territoireB }) {
     if (!territoireA || !territoireB) return
 
     setLoading(true)
-    
+
     // Fonction utilitaire pour fusionner deux tableaux de données par année
     const mergeData = (dataA, dataB, key) => {
       const years = [...new Set([...dataA.map(d => d.annee), ...dataB.map(d => d.annee)])].sort()
@@ -61,7 +61,7 @@ function CompareView({ territoireA, territoireB }) {
     <div className={`compare-view ${loading ? 'loading' : ''}`}>
       <div className="compare-header">
         <h3 className="compare-title">
-          ⚖️ <span className="text-gradient">Comparaison du marché</span>
+          <span className="text-gradient">Comparaison du marché</span>
         </h3>
         <div className="compare-badges">
           <span className="badge badge-a">{territoireA.nom}</span>
@@ -79,7 +79,7 @@ function CompareView({ territoireA, territoireB }) {
               <XAxis dataKey="annee" tick={{ fontSize: 11 }} />
               <YAxis tick={{ fontSize: 11 }} width={60} tickFormatter={(v) => `${v}€`} />
               <Tooltip contentStyle={TOOLTIP_STYLE} />
-              <Legend verticalAlign="top" height={36}/>
+              <Legend verticalAlign="top" height={36} />
               <Line type="monotone" dataKey={territoireA.nom} stroke="#4F46E5" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 7 }} />
               <Line type="monotone" dataKey={territoireB.nom} stroke="#F43F5E" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 7 }} />
             </LineChart>
@@ -92,16 +92,16 @@ function CompareView({ territoireA, territoireB }) {
             <BarChart data={popData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e8e8e8" vertical={false} />
               <XAxis dataKey="annee" tick={{ fontSize: 11 }} />
-              <YAxis tick={{ fontSize: 11 }} width={60} tickFormatter={(v) => `${(v/1000).toFixed(0)}k`} />
+              <YAxis tick={{ fontSize: 11 }} width={60} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
               <Tooltip contentStyle={TOOLTIP_STYLE} />
-              <Legend verticalAlign="top" height={36}/>
+              <Legend verticalAlign="top" height={36} />
               <Bar dataKey={territoireA.nom} fill="#4F46E5" radius={[4, 4, 0, 0]} />
               <Bar dataKey={territoireB.nom} fill="#F43F5E" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
       </div>
-      
+
       {loading && <div className="loader-overlay">Mise à jour des données...</div>}
     </div>
   )

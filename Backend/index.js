@@ -39,7 +39,7 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5001;
-app.listen(PORT, () => {
+app.server = app.listen(PORT, () => {
   console.log(`Serveur sur port ${PORT}`);
 });
 export default app;

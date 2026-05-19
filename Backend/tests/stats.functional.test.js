@@ -1,4 +1,4 @@
-import { describe, it } from 'node:test';
+import { describe, it, after } from 'node:test';
 import assert from 'node:assert/strict';
 import request from 'supertest';
 import app from '../index.js'; 
@@ -26,4 +26,12 @@ describe('Tests Fonctionnels - API Dashboard (Stats)', () => {
     assert.ok(Array.isArray(response.body.evolution), 'Evolution devrait être un tableau');
   });
 
+});
+
+after(async () => {
+  const { default: prisma } = await import('../src/lib/prisma.js');
+  await prisma.$disconnect();
+  if (app.server) {
+    app.server.close();
+  }
 });
